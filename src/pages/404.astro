@@ -1,0 +1,59 @@
+---
+import PrimaryButton from '../components/PrimaryButton.astro';
+import SecondaryButton from '../components/SecondaryButton.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Halaman tidak ditemukan"
+  description="Halaman yang Anda cari tidak ditemukan di Jejak KKN Pancalang."
+  noindex
+>
+  <section class="section not-found">
+    <div class="container not-found__content">
+      <p class="eyebrow">404 · Alamat tidak ditemukan</p>
+      <h1>Halaman yang Anda cari tidak tersedia.</h1>
+      <p class="not-found__description">
+        Alamatnya mungkin berubah atau sudah tidak digunakan. Kembali ke beranda atau lanjutkan
+        menjelajahi dokumentasi kegiatan.
+      </p>
+      <div class="not-found__actions">
+        <PrimaryButton href="/">Kembali ke beranda</PrimaryButton>
+        <SecondaryButton href="/kegiatan">Lihat kegiatan</SecondaryButton>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found {
+    display: grid;
+    min-height: 62vh;
+    align-items: center;
+  }
+
+  .not-found__content {
+    display: grid;
+    max-width: 48rem;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  h1 {
+    max-width: 15ch;
+    font-size: var(--font-size-3xl);
+  }
+
+  .not-found__description {
+    max-width: 42rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+  }
+
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+</style>

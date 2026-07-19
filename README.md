@@ -60,9 +60,10 @@ foto pada Sheets menerima `drive://FILE_ID`, file ID mentah, atau URL Google Dri
 tidak pernah memuat URL Drive tersebut secara langsung.
 
 ```sh
-npm run photos:sync  # unduh, koreksi orientasi, resize ≤1600 px, lalu WebP quality 80
-npm run dev          # menjalankan sinkronisasi sebelum dev server
-npm run build        # menjalankan sinkronisasi sebelum build Cloudflare Pages
+npm run photos:sync         # sinkron toleran untuk development; cache boleh dipakai
+npm run photos:sync:strict  # wajib membaca Sheets dan mengunduh seluruh foto publik
+npm run dev                 # memakai sinkronisasi development yang toleran
+npm run build               # memakai sinkronisasi strict sebelum build Cloudflare Pages
 ```
 
 Sinkronisasi memakai loader tunggal di `src/data/sheets.ts`, lalu mengumpulkan referensi foto dari
@@ -73,6 +74,8 @@ berkas menyertakan hash isi sehingga foto yang berubah mendapat URL baru dan tid
 Cloudflare. Folder aset dan cache (`public/_photos/`, `.cache/photos/`) tetap tidak di-commit. Bila
 Sheets sedang tidak terhubung, sinkronisasi mempertahankan manifest dan cache sebelumnya. Bila foto
 opsional belum tersedia, UI menampilkan placeholder atau kontrol nonaktif sampai sinkronisasi berikutnya.
+Build produksi bersifat fail-fast: koneksi Sheets, validasi sepuluh tab, atau foto Drive publik yang
+gagal diproses akan menghentikan build agar situs kosong atau parsial tidak ikut terpublikasi.
 
 ## Struktur fondasi
 

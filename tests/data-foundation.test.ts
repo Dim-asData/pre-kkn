@@ -160,4 +160,18 @@ describe('parser dan loader Google Sheets produksi', () => {
     expect(result.data.activityPhotos).toEqual([]);
     expect(result.warnings[0]).toContain('empty state aman');
   });
+
+  it('menggagalkan koneksi Sheets ketika loader dipanggil dalam mode required', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError('fetch failed');
+    }) as unknown as typeof fetch;
+
+    await expect(
+      loadSheetsData({
+        sheetId: 'sheet-offline-required',
+        fetchImpl,
+        required: true,
+      }),
+    ).rejects.toThrow('Gagal terhubung ke Sheet Pengaturan');
+  });
 });

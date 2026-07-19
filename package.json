@@ -7,10 +7,12 @@
   },
   "scripts": {
     "photos:sync": "node --env-file-if-exists=.env --experimental-strip-types scripts/sync-photos.ts",
+    "photos:sync:strict": "npm run photos:sync -- --strict",
     "predev": "npm run photos:sync",
     "dev": "astro dev",
-    "prebuild": "npm run photos:sync",
+    "prebuild": "npm run photos:sync:strict",
     "build": "astro build",
+    "postbuild": "node --experimental-strip-types scripts/verify-build.ts",
     "check": "astro check",
     "test": "vitest run",
     "preview": "astro preview",

@@ -142,6 +142,8 @@ const configuredSheetId = (explicitSheetId?: string): string | undefined => {
   return explicitSheetId?.trim() || nodeSheetId || astroSheetId || undefined;
 };
 
+const productionBuildRequiresSheets = import.meta.env?.PROD === true;
+
 const connectionFallback = (message: string): LoadedSheets => ({
   data: createEmptySheetsData(),
   warnings: [`Google Sheets tidak dapat dibaca; data menggunakan empty state aman. ${message}`],
@@ -150,8 +152,9 @@ const connectionFallback = (message: string): LoadedSheets => ({
 
 const loadSheetsDataUncached = async (options: LoadSheetsOptions = {}): Promise<LoadedSheets> => {
   const sheetId = configuredSheetId(options.sheetId);
+  const connectionRequired = options.required ?? productionBuildRequiresSheets;
   if (!sheetId) {
-    if (options.required) {
+    if (connectionRequired) {
       throw new Error('PUBLIC_SHEET_ID wajib diisi untuk memuat data Google Sheets.');
     }
 
@@ -172,7 +175,7 @@ const loadSheetsDataUncached = async (options: LoadSheetsOptions = {}): Promise<
       ),
     );
   } catch (error) {
-    if (!(error instanceof SheetsConnectionError) || options.required) throw error;
+    if (!(error instanceof SheetsConnectionError) || connectionRequired) throw error;
     return connectionFallback(error.message);
   }
 

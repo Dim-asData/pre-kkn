@@ -132,7 +132,7 @@ const syncPhoto = async (id: string, previous: PhotoManifest): Promise<[string, 
   } catch (error) {
     const previousUrl = previous[id];
     const previousPath = previousUrl && join(outputDirectory, previousUrl.split('/').pop() ?? '');
-    if (previousUrl && previousPath && (await exists(previousPath))) {
+    if (!strict && previousUrl && previousPath && (await exists(previousPath))) {
       console.warn(`Memakai foto cache untuk ${id}: ${String(error)}`);
       return [id, previousUrl];
     }
@@ -143,7 +143,10 @@ const syncPhoto = async (id: string, previous: PhotoManifest): Promise<[string, 
 
 const main = async () => {
   await Promise.all([mkdir(outputDirectory, { recursive: true }), mkdir(cacheDirectory, { recursive: true })]);
-  const [loaded, previous] = await Promise.all([loadSheetsData(), readPreviousManifest()]);
+  const [loaded, previous] = await Promise.all([
+    loadSheetsData({ required: strict }),
+    readPreviousManifest(),
+  ]);
   loaded.warnings.forEach((warning) => console.warn(warning));
 
   if (!loaded.connected) {
