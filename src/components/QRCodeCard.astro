@@ -1,0 +1,112 @@
+---
+import { photoUrl } from '../lib/photos';
+
+interface Props {
+  catalogUrl?: string | null;
+  qrisImage?: string | null;
+  name: string;
+}
+
+const { catalogUrl, qrisImage, name } = Astro.props;
+---
+
+<section class="qr-card" aria-labelledby="qr-card-title">
+  <div>
+    <p class="eyebrow">Akses digital</p>
+    <h2 id="qr-card-title">Katalog dan QRIS</h2>
+  </div>
+  <div class="qr-card__grid">
+    <article>
+      <h3>Katalog digital</h3>
+      {
+        catalogUrl ? (
+          <>
+            <p>Katalog digital usaha ini dapat dibuka melalui tautan berikut.</p>
+            <a href={catalogUrl} target="_blank" rel="noreferrer">Buka katalog</a>
+          </>
+        ) : (
+          <p>Katalog digital belum dicantumkan.</p>
+        )
+      }
+    </article>
+    <article>
+      <h3>QRIS</h3>
+      {
+        qrisImage ? (
+          <img
+            src={photoUrl(qrisImage)}
+            alt={`QRIS ${name}`}
+            width="600"
+            height="600"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <p>QRIS sengaja tidak ditampilkan sampai data aman dan siap dipublikasikan.</p>
+        )
+      }
+    </article>
+  </div>
+</section>
+
+<style>
+  .qr-card {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .qr-card > div:first-child {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .qr-card__grid {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  article {
+    display: grid;
+    padding: var(--space-5);
+    align-content: start;
+    gap: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  article p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  article a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    width: fit-content;
+    align-items: center;
+    color: #2f6f9d;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+  }
+
+  img {
+    width: min(100%, 16rem);
+    aspect-ratio: 1;
+    object-fit: contain;
+  }
+
+  @media (min-width: 42rem) {
+    .qr-card__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

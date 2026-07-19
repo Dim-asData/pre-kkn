@@ -1,0 +1,236 @@
+---
+import type { ActivityPhoto, SuccessIndicator } from '../data/types';
+import { hasSyncedDrivePhoto, photoUrl } from '../lib/photos';
+import EmptyState from './EmptyState.astro';
+
+interface Props {
+  indicators: SuccessIndicator[];
+  photos?: ActivityPhoto[];
+}
+
+const { indicators, photos = [] } = Astro.props;
+
+const labelFor = (value: boolean | null) => {
+  if (value === true) return 'Tercapai';
+  if (value === false) return 'Belum tercapai';
+  return null;
+};
+---
+
+<section class="indicators" aria-labelledby="indicators-title">
+  <div>
+    <p class="eyebrow">Ukuran keberhasilan</p>
+    <h2 id="indicators-title">Indikator dan bukti</h2>
+  </div>
+  {
+    indicators.length ? (
+      <ul>
+        {indicators.map((indicator) => {
+          const label = labelFor(indicator.achieved);
+          const availablePhotos = photos.filter(
+            (photo) =>
+              photo.role === 'evidence' &&
+              photo.indicatorId === indicator.id &&
+              photo.active &&
+              photo.verificationStatus === 'verified' &&
+              hasSyncedDrivePhoto(photo.driveFile),
+          );
+
+          return (
+            <li class:list={[indicator.achieved === true && 'is-achieved']}>
+              <span
+                class="indicators__mark"
+                role={label ? undefined : 'img'}
+                aria-label={label ? undefined : 'Belum dinilai'}
+                aria-hidden={label ? 'true' : undefined}
+              >
+                {indicator.achieved === true ? '✓' : indicator.achieved === false ? '–' : '?'}
+              </span>
+              <div class="indicators__content">
+                <div class="indicators__topline">
+                  <strong>{indicator.label}</strong>
+                  {label && <span>{label}</span>}
+                </div>
+                {indicator.evidence ? (
+                  <p>Bukti: {indicator.evidence}</p>
+                ) : (
+                  <p>Bukti pendukung belum dicatat.</p>
+                )}
+                {
+                  availablePhotos.length ? (
+                    <details class="indicators__image">
+                      <summary>Lihat gambar</summary>
+                      <div class="indicators__images">
+                        {availablePhotos.map((photo) => (
+                          <figure>
+                            <img
+                              src={photoUrl(photo.driveFile)}
+                              alt={photo.alt}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                            {photo.caption && <figcaption>{photo.caption}</figcaption>}
+                          </figure>
+                        ))}
+                      </div>
+                    </details>
+                  ) : (
+                    <button
+                      class="indicators__image-trigger"
+                      type="button"
+                      disabled
+                      aria-label={`Foto bukti ${indicator.label} belum tersedia`}
+                    >
+                      Lihat gambar
+                    </button>
+                  )
+                }
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    ) : (
+      <EmptyState
+        title="Indikator belum tersedia"
+        description="Penilaian keberhasilan akan tampil setelah indikator dan bukti dimasukkan."
+      />
+    )
+  }
+</section>
+
+<style>
+  .indicators {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .indicators > div:first-child {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    gap: var(--space-3);
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    padding: var(--space-4);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  .indicators__mark {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    font-weight: 800;
+  }
+
+  .is-achieved .indicators__mark {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+
+  .indicators__topline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .indicators__content {
+    min-width: 0;
+  }
+
+  .indicators__topline > span {
+    padding: 0.18rem 0.55rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+  }
+
+  .is-achieved .indicators__topline > span {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+
+  li p {
+    margin-top: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .indicators__image {
+    margin-top: var(--space-3);
+  }
+
+  .indicators__image summary,
+  .indicators__image-trigger {
+    width: 100%;
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .indicators__image summary {
+    cursor: pointer;
+  }
+
+  .indicators__image-trigger {
+    margin-top: var(--space-3);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    font-family: inherit;
+  }
+
+  .indicators__images {
+    display: grid;
+    margin-top: var(--space-3);
+    gap: var(--space-3);
+  }
+
+  .indicators__images figure {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+  }
+
+  .indicators__images img {
+    display: block;
+    width: 100%;
+    max-height: 22rem;
+    object-fit: cover;
+  }
+
+  .indicators__images figcaption {
+    padding: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+</style>

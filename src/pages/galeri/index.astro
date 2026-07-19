@@ -1,0 +1,282 @@
+---
+import EmptyState from '../../components/EmptyState.astro';
+import FilterBar from '../../components/FilterBar.astro';
+import {
+  buildActivityDetails,
+  buildActivityGallery,
+  loadSheetsData,
+  publicSheetsData,
+} from '../../data';
+import { CATEGORY_LABELS, formatDate } from '../../data/format';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const loadedSheets = await loadSheetsData();
+loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+const data = publicSheetsData(loadedSheets.data);
+const activities = buildActivityDetails(data).sort((a, b) => {
+  const aDate = a.actualDate ?? a.plannedDate ?? '9999-12-31';
+  const bDate = b.actualDate ?? b.plannedDate ?? '9999-12-31';
+  return aDate.localeCompare(bDate) || a.title.localeCompare(b.title, 'id');
+});
+const gallery = buildActivityGallery(activities);
+const tags = [...new Set(gallery.flatMap((image) => image.tags))].sort((a, b) =>
+  a.localeCompare(b, 'id'),
+);
+const filterGroups = [
+  {
+    key: 'kelompok',
+    label: 'Kelompok',
+    options: data.groups.map(({ id, village }) => ({
+      value: id,
+      label: `${id.toUpperCase()} · ${village.replace(/^Desa\s+/i, '')}`,
+    })),
+  },
+  {
+    key: 'kategori',
+    label: 'Jenis program',
+    options: Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
+  },
+  ...(tags.length
+    ? [
+        {
+          key: 'tag',
+          label: 'Tag',
+          options: tags.map((tag) => ({ value: tag, label: tag })),
+        },
+      ]
+    : []),
+];
+---
+
+<BaseLayout
+  title="Galeri"
+  description="Galeri seluruh gambar yang digunakan pada artikel kegiatan aktif KKN Kecamatan Pancalang."
+>
+  <section class="page-intro">
+    <div class="page-intro__inner container">
+      <p class="eyebrow">Cerita dalam gambar</p>
+      <h1>Potongan proses dari Sumbakeling, Silebu, dan Pancalang.</h1>
+      <p class="page-intro__description">
+        Setiap foto berasal dari konteks artikel kegiatan aktif di Google Sheets dan dapat
+        ditelusuri kembali ke cerita sumbernya.
+      </p>
+      <p class="page-intro__meta">
+        <strong>{gallery.length} foto</strong>
+        <span aria-hidden="true">·</span>
+        <span>Diturunkan langsung dari artikel kegiatan aktif</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" data-filter-root>
+      {
+        gallery.length ? (
+          <>
+            <FilterBar groups={filterGroups} resultLabel="foto" />
+            <div class="gallery-grid">
+              {gallery.map((image, index) => (
+                <figure
+                  class:list={[index % 5 === 0 && 'gallery-card--tall']}
+                  data-filter-item
+                  data-filter-kelompok={image.groupId}
+                  data-filter-kategori={image.category}
+                  data-filter-tag={image.tags.join('|')}
+                >
+                  <a
+                    class="gallery-card__image-link"
+                    href={image.activityHref}
+                    aria-label={`Buka artikel ${image.activityTitle}`}
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      width="1200"
+                      height={index % 5 === 0 ? '1600' : '900'}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </a>
+                  <figcaption>
+                    <div class="gallery-card__meta">
+                      <span>{image.groupId.toUpperCase()}</span>
+                      <span>{CATEGORY_LABELS[image.category]}</span>
+                      {image.date && <time datetime={image.date}>{formatDate(image.date)}</time>}
+                    </div>
+                    <h2><a href={image.activityHref}>{image.activityTitle}</a></h2>
+                    <p>{image.caption}</p>
+                    {
+                      image.tags.length > 0 && (
+                        <ul aria-label="Tag kegiatan">
+                          {image.tags.map((tag) => <li>{tag}</li>)}
+                        </ul>
+                      )
+                    }
+                    <a href={image.activityHref}>Baca artikel kegiatan sumber →</a>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <div hidden data-filter-empty class="filtered-empty">
+              <EmptyState
+                title="Belum ada foto untuk filter ini"
+                description="Coba pilih kelompok, jenis program, atau tag yang lain."
+              />
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            title="Galeri kegiatan belum tersedia"
+            description="Belum ada foto terverifikasi yang dirender pada artikel kegiatan aktif."
+          />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  figure {
+    display: grid;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .gallery-card__image-link {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+  }
+
+  figure img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    background: var(--color-surface-soft);
+    transition: transform var(--transition-fast);
+  }
+
+  .gallery-card__image-link:hover img {
+    transform: scale(1.025);
+  }
+
+  figcaption {
+    display: grid;
+    padding: var(--space-3);
+    align-content: start;
+    gap: var(--space-2);
+  }
+
+  .gallery-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-size: var(--font-size-base);
+  }
+
+  h2 a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h2 a:hover {
+    color: #2f6f9d;
+  }
+
+  figcaption > p {
+    display: none;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  ul {
+    display: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    list-style: none;
+  }
+
+  li {
+    padding: 0.14rem 0.45rem;
+    border-radius: var(--radius-pill);
+    color: #2f6f9d;
+    background: var(--color-primary-soft);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+
+  figcaption > a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    color: #2f6f9d;
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+  }
+
+  .filtered-empty {
+    margin-top: var(--space-6);
+  }
+
+  @media (min-width: 40rem) {
+    .gallery-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    figcaption {
+      padding: var(--space-4);
+    }
+
+    h2 {
+      font-size: var(--font-size-lg);
+    }
+
+    figcaption > p,
+    ul {
+      display: flex;
+    }
+
+    figcaption > p {
+      display: block;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .gallery-grid {
+      grid-auto-flow: dense;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .gallery-card--tall {
+      grid-row: span 2;
+    }
+
+    .gallery-card--tall .gallery-card__image-link,
+    .gallery-card--tall img {
+      height: 100%;
+      min-height: 28rem;
+    }
+  }
+</style>

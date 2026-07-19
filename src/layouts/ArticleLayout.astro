@@ -1,0 +1,253 @@
+---
+import type { ActivityDetail, ActivityPhoto } from '../data/types';
+import { isSupplementalActivityPhoto, splitMultilineParagraphs } from '../data';
+import { photoUrl } from '../lib/photos';
+import ArticleHeader from '../components/ArticleHeader.astro';
+import BeneficiarySummary from '../components/BeneficiarySummary.astro';
+import EmptyState from '../components/EmptyState.astro';
+import ImageGallery from '../components/ImageGallery.astro';
+import InfoBox from '../components/InfoBox.astro';
+import PreviousNextNavigation from '../components/PreviousNextNavigation.astro';
+import ProgramOutputs from '../components/ProgramOutputs.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import SuccessIndicators from '../components/SuccessIndicators.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import BaseLayout from './BaseLayout.astro';
+
+interface NavigationItem {
+  href: string;
+  title: string;
+}
+
+interface RelatedItem {
+  href: string;
+  title: string;
+  description: string;
+  label?: string;
+}
+
+interface Props {
+  activity: ActivityDetail;
+  previous?: NavigationItem | null;
+  next?: NavigationItem | null;
+  related?: RelatedItem[];
+}
+
+type ArticleSection = NonNullable<ActivityPhoto['articleSection']>;
+
+const { activity, previous = null, next = null, related = [] } = Astro.props;
+const article = activity.article;
+const paragraphs = {
+  penerima_manfaat: splitMultilineParagraphs(article?.beneficiaryNarrative),
+  hasil_program: splitMultilineParagraphs(article?.programResultsNarrative),
+  cerita_program: splitMultilineParagraphs(article?.programStory),
+  ukuran_keberhasilan: splitMultilineParagraphs(article?.successMeasureNarrative),
+};
+
+const inferredSection = (photo: ActivityPhoto): ArticleSection | null => {
+  if (photo.articleSection) return photo.articleSection;
+  if (photo.role === 'output') return 'hasil_program';
+  if (photo.role === 'evidence') return 'ukuran_keberhasilan';
+  return null;
+};
+
+const renderablePhotos = activity.photos.filter(
+  ({ active, verificationStatus }) => active && verificationStatus === 'verified',
+);
+const sectionPhotos = (section: ArticleSection) =>
+  renderablePhotos
+    .filter((photo) => photo.role !== 'hero' && inferredSection(photo) === section)
+    .map((photo) => ({
+      src: photoUrl(photo.driveFile),
+      alt: photo.alt,
+      caption: photo.caption ?? photo.alt,
+    }));
+
+const storyEntries = renderablePhotos
+  .filter(
+    (photo) => photo.role === 'narrative' && inferredSection(photo) === 'cerita_program',
+  )
+  .map((photo) => ({
+    image: {
+      src: photoUrl(photo.driveFile),
+      alt: photo.alt,
+      caption: photo.caption ?? photo.alt,
+    },
+    description: splitMultilineParagraphs(photo.description),
+  }));
+
+const indicatorPhotos = renderablePhotos.filter(
+  (photo) =>
+    photo.role === 'evidence' &&
+    Boolean(photo.indicatorId) &&
+    inferredSection(photo) === 'ukuran_keberhasilan',
+);
+
+const supplementalGalleryImages = renderablePhotos
+  .filter(isSupplementalActivityPhoto)
+  .map((photo) => ({
+    src: photoUrl(photo.driveFile),
+    alt: photo.alt,
+    caption: photo.caption ?? photo.alt,
+  }));
+
+const headings = [
+  { depth: 2, slug: 'penerima-manfaat', text: 'Penerima manfaat' },
+  { depth: 2, slug: 'hasil-program', text: 'Hasil program' },
+  { depth: 2, slug: 'cerita-program', text: 'Cerita program' },
+  { depth: 2, slug: 'ukuran-keberhasilan', text: 'Ukuran keberhasilan' },
+];
+---
+
+<BaseLayout title={activity.title} description={activity.shortDescription}>
+  <ArticleHeader
+    title={activity.title}
+    description={activity.shortDescription}
+    kelompok={activity.groupId}
+    category={activity.category}
+    status={activity.status}
+    plannedDate={activity.plannedDate}
+    actualDate={activity.actualDate}
+    location={activity.location}
+    image={activity.heroPhoto?.driveFile ?? null}
+    imageAlt={activity.heroPhoto?.alt ?? null}
+  />
+
+  <section class="section">
+    <div class="container detail-shell detail-shell--sidebar">
+      <div class="detail-main">
+        {
+          activity.status === 'planned' && (
+            <InfoBox title="Kegiatan ini masih berupa rencana" tone="planned">
+              Tanggal, jumlah peserta, bantuan, indikator, dan narasi pada halaman ini belum boleh
+              dibaca sebagai realisasi. Pembaruan dilakukan setelah bukti pelaksanaan diverifikasi.
+            </InfoBox>
+          )
+        }
+
+        <TableOfContents headings={headings} placement="mobile" />
+
+        <section class="detail-section article-section" id="penerima-manfaat">
+          <BeneficiarySummary beneficiaries={activity.beneficiaries} />
+          {
+            paragraphs.penerima_manfaat.length > 0 && (
+              <div class="prose article-section__narrative">
+                {paragraphs.penerima_manfaat.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+            )
+          }
+          {
+            sectionPhotos('penerima_manfaat').length > 0 && (
+              <ImageGallery images={sectionPhotos('penerima_manfaat')} showHeading={false} />
+            )
+          }
+        </section>
+
+        <section class="detail-section article-section" id="hasil-program">
+          <ProgramOutputs outputs={activity.outputs} />
+          {
+            paragraphs.hasil_program.length > 0 && (
+              <div class="prose article-section__narrative">
+                {paragraphs.hasil_program.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+            )
+          }
+        </section>
+
+        <section class="detail-section article-section" id="cerita-program">
+          <div class="article-section__heading">
+            <p class="eyebrow">Cerita program</p>
+            <h2>
+              {activity.status === 'planned' ? 'Rencana dan konteks kegiatan' : 'Catatan pelaksanaan'}
+            </h2>
+          </div>
+          {
+            paragraphs.cerita_program.length > 0 && (
+              <div class="prose article-section__narrative">
+                {paragraphs.cerita_program.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+            )
+          }
+          {
+            storyEntries.length > 0 && (
+              <div class="article-story">
+                {storyEntries.map((entry) => (
+                  <div class="article-story__entry">
+                    <ImageGallery images={[entry.image]} showHeading={false} variant="story" />
+                    <div class="prose article-story__description">
+                      {entry.description.map((paragraph) => <p>{paragraph}</p>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+          {
+            paragraphs.cerita_program.length === 0 && storyEntries.length === 0 && (
+              <EmptyState
+                title="Cerita program belum tersedia"
+                description="Narasi kegiatan akan tampil setelah ditambahkan dan diverifikasi melalui Google Sheets."
+              />
+            )
+          }
+        </section>
+
+        <section class="detail-section article-section" id="ukuran-keberhasilan">
+          <SuccessIndicators indicators={activity.indicators} photos={indicatorPhotos} />
+          {
+            paragraphs.ukuran_keberhasilan.length > 0 && (
+              <div class="prose article-section__narrative">
+                {paragraphs.ukuran_keberhasilan.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+            )
+          }
+        </section>
+
+        {
+          supplementalGalleryImages.length > 0 && (
+            <ImageGallery images={supplementalGalleryImages} />
+          )
+        }
+
+        <PreviousNextNavigation previous={previous} next={next} />
+        <RelatedContent items={related} title="Kegiatan terkait" />
+      </div>
+      <TableOfContents headings={headings} placement="desktop" />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .article-section {
+    scroll-margin-top: var(--space-7);
+  }
+
+  .article-section__heading {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .article-section__heading h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .article-section__narrative {
+    max-width: var(--content-max);
+  }
+
+  .article-story {
+    display: grid;
+    max-width: var(--content-max);
+    gap: var(--space-7);
+  }
+
+  .article-story__entry {
+    display: grid;
+    min-width: 0;
+    gap: var(--space-4);
+  }
+
+  .article-story__description {
+    max-width: none;
+  }
+</style>

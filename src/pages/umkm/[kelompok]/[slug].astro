@@ -1,0 +1,41 @@
+---
+import {
+  loadSheetsData,
+  publicSheetsData,
+  type GroupData,
+  type ProductData,
+  type UmkmData,
+} from '../../../data';
+import UMKMLayout from '../../../layouts/UMKMLayout.astro';
+
+interface Props {
+  item: UmkmData;
+  group?: GroupData;
+  products: ProductData[];
+  related: UmkmData[];
+}
+
+export async function getStaticPaths() {
+  const loadedSheets = await loadSheetsData();
+  loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+  const data = publicSheetsData(loadedSheets.data);
+
+  return data.umkm.map((item) => ({
+    params: { kelompok: item.groupId, slug: item.slug },
+    props: {
+      item,
+      group: data.groups.find(({ id }) => id === item.groupId),
+      products: data.products.filter(({ umkmId }) => umkmId === item.id),
+      related: data.umkm
+        .filter(
+          (candidate) => candidate.groupId === item.groupId && candidate.id !== item.id,
+        )
+        .slice(0, 3),
+    },
+  }));
+}
+
+const { item, group, products, related } = Astro.props;
+---
+
+<UMKMLayout item={item} group={group} products={products} related={related} />

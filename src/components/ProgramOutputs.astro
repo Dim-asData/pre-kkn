@@ -1,0 +1,265 @@
+---
+import type { ProgramOutput } from '../data/types';
+import { hasSyncedDrivePhoto, photoUrl } from '../lib/photos';
+import EmptyState from './EmptyState.astro';
+
+interface Props {
+  outputs: ProgramOutput[];
+  title?: string;
+}
+
+const { outputs, title = 'Output program' } = Astro.props;
+const groups = [
+  {
+    type: 'non_physical' as const,
+    label: 'Output nonfisik',
+    description: 'Pengetahuan, materi, desain, atau pendampingan yang dihasilkan.',
+  },
+  {
+    type: 'physical' as const,
+    label: 'Bantuan fisik',
+    description: 'Peralatan atau sarana yang direncanakan maupun telah terverifikasi.',
+  },
+];
+---
+
+<section class="program-outputs" aria-labelledby="program-outputs-title">
+  <div class="program-outputs__heading">
+    <p class="eyebrow">Hasil program</p>
+    <h2 id="program-outputs-title">{title}</h2>
+  </div>
+  {
+    outputs.length ? (
+      <div class="program-outputs__grid">
+        {groups.map((group) => {
+          const items = outputs.filter(({ type }) => type === group.type);
+          return (
+            <section class:list={['program-outputs__group', `program-outputs__group--${group.type}`]}>
+              <h3>{group.label}</h3>
+              <p>{group.description}</p>
+              {items.length ? (
+                <ul>
+                  {items.map((item) => {
+                    const amount = item.actual ?? item.planned;
+                    const hasImage = hasSyncedDrivePhoto(item.image);
+                    return (
+                      <li>
+                        <div>
+                          <strong>{item.name}</strong>
+                          {item.recipient && <span>Penerima: {item.recipient}</span>}
+                        </div>
+                        <span class:list={['program-outputs__value', hasImage && 'has-image']}>
+                          <span
+                            class="program-outputs__status"
+                            role="img"
+                            aria-label={
+                              hasImage ? 'Foto dokumentasi tersedia' : 'Foto dokumentasi belum tersedia'
+                            }
+                            title={
+                              hasImage ? 'Foto dokumentasi tersedia' : 'Foto dokumentasi belum tersedia'
+                            }
+                          >
+                            {hasImage ? '✓' : '!'}
+                          </span>
+                          <span>{amount === null ? 'Belum ditentukan' : `${amount} ${item.unit}`}</span>
+                        </span>
+                        {
+                          hasImage ? (
+                            <details class="program-outputs__image">
+                              <summary>Lihat gambar</summary>
+                              <img
+                                src={photoUrl(item.image)}
+                                alt={item.imageAlt ?? `Dokumentasi ${item.name}`}
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </details>
+                          ) : (
+                            <button
+                              class="program-outputs__image-trigger"
+                              type="button"
+                              disabled
+                              aria-label={`Foto dokumentasi ${item.name} belum tersedia`}
+                            >
+                              Lihat gambar
+                            </button>
+                          )
+                        }
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p class="program-outputs__empty">Belum ada data untuk kelompok output ini.</p>
+              )}
+            </section>
+          );
+        })}
+      </div>
+    ) : (
+      <EmptyState
+        title="Output belum dicatat"
+        description="Rencana dan realisasi output akan tampil di sini setelah tersedia pada data kegiatan."
+      />
+    )
+  }
+</section>
+
+<style>
+  .program-outputs {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .program-outputs__heading {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .program-outputs__grid {
+    display: grid;
+    align-items: start;
+    gap: var(--space-4);
+  }
+
+  .program-outputs__group {
+    display: grid;
+    min-width: 0;
+    padding: var(--space-5);
+    align-content: start;
+    gap: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .program-outputs__group--non_physical {
+    border-top: 4px solid var(--color-primary);
+  }
+
+  .program-outputs__group--physical {
+    border-top: 4px solid var(--color-t3);
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  .program-outputs__group > p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  ul {
+    display: grid;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    gap: var(--space-3);
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    padding-top: var(--space-3);
+    gap: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  li > div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  li strong {
+    line-height: 1.45;
+  }
+
+  li div span {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  .program-outputs__value {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    gap: var(--space-2);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+  }
+
+  .program-outputs__status {
+    display: inline-grid;
+    width: 1.35rem;
+    height: 1.35rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    font-size: 0.8rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .program-outputs__value.has-image .program-outputs__status {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+
+  .program-outputs__image,
+  .program-outputs__image-trigger {
+    grid-column: 1 / -1;
+  }
+
+  .program-outputs__image summary {
+    width: 100%;
+    cursor: pointer;
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .program-outputs__image-trigger {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    color: var(--color-text-muted);
+    background: transparent;
+    cursor: not-allowed;
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .program-outputs__image img {
+    display: block;
+    width: 100%;
+    max-height: 22rem;
+    margin-top: var(--space-3);
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+  }
+
+  .program-outputs__empty {
+    margin-top: var(--space-3);
+    font-style: italic;
+  }
+
+  @media (min-width: 48rem) {
+    .program-outputs__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    li {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+  }
+</style>

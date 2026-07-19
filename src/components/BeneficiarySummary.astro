@@ -1,0 +1,107 @@
+---
+import type { Beneficiary } from '../data/types';
+import EmptyState from './EmptyState.astro';
+
+interface Props {
+  beneficiaries: Beneficiary[];
+}
+
+const { beneficiaries } = Astro.props;
+---
+
+<section class="beneficiaries" aria-labelledby="beneficiaries-title">
+  <div>
+    <p class="eyebrow">Penerima manfaat</p>
+    <h2 id="beneficiaries-title">Sasaran dan jumlah peserta</h2>
+  </div>
+  {
+    beneficiaries.length ? (
+      <dl>
+        {beneficiaries.map((item) => {
+          const isActual = item.actual !== null;
+          const value = item.actual ?? item.planned;
+          return (
+            <div>
+              <dt>{item.label}</dt>
+              <dd>
+                <span>{isActual ? 'Realisasi' : 'Rencana'}</span>
+                <strong>{value === null ? 'Belum ditentukan' : `${value} ${item.unit}`}</strong>
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    ) : (
+      <EmptyState
+        title="Data penerima manfaat belum tersedia"
+        description="Sasaran dan jumlah peserta akan ditampilkan setelah dicatat pada kegiatan."
+      />
+    )
+  }
+</section>
+
+<style>
+  .beneficiaries {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .beneficiaries > div:first-child {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  dl {
+    display: grid;
+    margin: 0;
+    gap: var(--space-3);
+  }
+
+  dl > div {
+    display: grid;
+    padding: var(--space-4);
+    gap: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  dt {
+    font-weight: 750;
+    line-height: 1.45;
+  }
+
+  dd {
+    display: grid;
+    margin: 0;
+    gap: var(--space-1);
+    color: var(--color-warning);
+  }
+
+  dd span {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  dd strong {
+    color: inherit;
+    font-size: var(--font-size-sm);
+  }
+
+  @media (min-width: 40rem) {
+    dl > div {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    dd {
+      text-align: right;
+    }
+  }
+</style>

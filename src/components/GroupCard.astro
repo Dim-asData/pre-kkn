@@ -1,0 +1,146 @@
+---
+import type { GroupData } from '../data/types';
+import GroupBadge from './GroupBadge.astro';
+import TextLink from './TextLink.astro';
+
+interface Props {
+  group: GroupData;
+  activityCount?: number;
+  umkmCount?: number;
+  educationCount?: number;
+}
+
+const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.props;
+---
+
+<article class:list={['group-card', `group-card--${group.id}`]}>
+  <div class="group-card__topline">
+    <GroupBadge kelompok={group.id} />
+    <span>{group.name}</span>
+  </div>
+  <div>
+    <p class="group-card__village">{group.village}</p>
+    <h3>{group.programTheme}</h3>
+  </div>
+  <p>{group.shortDescription}</p>
+  <dl>
+    <div>
+      <dt>Kegiatan</dt>
+      <dd>{activityCount}</dd>
+    </div>
+    <div>
+      <dt>UMKM</dt>
+      <dd>{umkmCount}</dd>
+    </div>
+    <div>
+      <dt>Edukasi</dt>
+      <dd>{educationCount}</dd>
+    </div>
+  </dl>
+  <TextLink href={`/kegiatan?kelompok=${group.id}`}>Jelajahi cerita kelompok</TextLink>
+</article>
+
+<style>
+  .group-card {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    padding: var(--space-5);
+    align-content: start;
+    gap: var(--space-4);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .group-card::before {
+    position: absolute;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    content: '';
+    inset: -4.6rem -3.5rem auto auto;
+    pointer-events: none;
+  }
+
+  .group-card--t1::before {
+    background: var(--color-t1-soft);
+  }
+
+  .group-card--t2::before {
+    background: var(--color-t2-soft);
+  }
+
+  .group-card--t3::before {
+    background: var(--color-t3-soft);
+  }
+
+  .group-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+  }
+
+  .group-card__topline {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+  }
+
+  .group-card__village {
+    margin-bottom: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  article > p {
+    color: var(--color-text-muted);
+  }
+
+  dl {
+    display: grid;
+    margin: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  dl div {
+    display: grid;
+    min-width: 0;
+    padding: var(--space-3);
+    gap: var(--space-1);
+  }
+
+  dl div + div {
+    border-left: 1px solid var(--color-border);
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-dark);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+  }
+</style>

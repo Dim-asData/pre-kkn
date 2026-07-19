@@ -1,0 +1,345 @@
+---
+import type { GroupData, ProductData, UmkmData } from '../data/types';
+import { splitMultilineParagraphs } from '../data';
+import { photoUrl } from '../lib/photos';
+import AidSummary from '../components/AidSummary.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import GroupBadge from '../components/GroupBadge.astro';
+import ImageGallery from '../components/ImageGallery.astro';
+import InfoBox from '../components/InfoBox.astro';
+import MapEmbed from '../components/MapEmbed.astro';
+import ProductCard from '../components/ProductCard.astro';
+import QRCodeCard from '../components/QRCodeCard.astro';
+import RelatedContent from '../components/RelatedContent.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  item: UmkmData;
+  group?: GroupData;
+  products: ProductData[];
+  related: UmkmData[];
+}
+
+const { item, group, products, related } = Astro.props;
+const storyParagraphs = splitMultilineParagraphs(item.story);
+const uniquenessParagraphs = splitMultilineParagraphs(item.uniqueness);
+const impactParagraphs = splitMultilineParagraphs(item.assistanceImpact);
+const isDummyProfile = [item.name, item.owner, item.tagline, item.shortDescription, item.address]
+  .filter(Boolean)
+  .some((value) => value?.includes('[DUMMY]'))
+  || item.heroPhoto?.includes('placehold.co')
+  || products.some((product) =>
+    [product.name, product.description].some((value) => value?.includes('[DUMMY]'))
+    || product.photo?.includes('placehold.co'),
+  );
+const galleryImages = [
+  ...(item.heroPhoto
+    ? [{ src: photoUrl(item.heroPhoto), alt: `Foto utama ${item.name}`, caption: `Profil ${item.name}` }]
+    : []),
+  ...products.flatMap((product) =>
+    product.photo
+      ? [{ src: photoUrl(product.photo), alt: `Foto ${product.name}`, caption: product.description ?? product.name }]
+      : [],
+  ),
+];
+---
+
+<BaseLayout title={item.name} description={item.shortDescription}>
+  <header class="profile-header">
+    <div class="container">
+      <Breadcrumb
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: 'UMKM', href: '/umkm' },
+          { label: item.name },
+        ]}
+      />
+      <div class="profile-header__grid">
+        <div class="profile-header__copy">
+          <div class="profile-header__badges">
+            <GroupBadge kelompok={item.groupId} showName />
+            <span>{item.category}</span>
+          </div>
+          <p class="eyebrow">Profil UMKM{isDummyProfile ? ' [DUMMY]' : ''}</p>
+          <h1>{item.name}</h1>
+          {item.tagline && <p class="profile-header__tagline">{item.tagline}</p>}
+          <p class="profile-header__description">{item.shortDescription}</p>
+          <dl>
+            <div>
+              <dt>Pemilik</dt>
+              <dd>{item.owner ?? 'Belum dicantumkan'}</dd>
+            </div>
+            <div>
+              <dt>Desa</dt>
+              <dd>{group?.village ?? item.groupId.toUpperCase()}</dd>
+            </div>
+            <div>
+              <dt>Jam operasional</dt>
+              <dd>{item.openingHours ?? 'Belum dicantumkan'}</dd>
+            </div>
+          </dl>
+          <WhatsAppButton number={item.whatsapp} />
+        </div>
+        <img
+          src={photoUrl(item.heroPhoto)}
+          alt={item.heroPhoto ? `Foto utama ${item.name}` : `[DUMMY] Placeholder foto utama ${item.name}`}
+          width="1200"
+          height="900"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container detail-main">
+      {
+        isDummyProfile && (
+          <InfoBox title="Data belum terverifikasi" tone="planned">
+            Informasi bertanda [DUMMY] masih dipertahankan sebagai data contoh. Kontak sensitif
+            tetap dikosongkan sampai data aman dan siap dipublikasikan.
+          </InfoBox>
+        )
+      }
+
+      <section class="detail-section">
+        <p class="eyebrow">Cerita usaha</p>
+        <h2>Berangkat dari produk dan keseharian warga.</h2>
+        {
+          storyParagraphs.length > 0 ? (
+            <div class="prose">
+              {storyParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+            </div>
+          ) : (
+            <>
+              <p>{item.shortDescription}</p>
+              <InfoBox title="Cerita usaha belum tersedia">
+                Narasi panjang usaha belum dicantumkan pada Google Sheets.
+              </InfoBox>
+            </>
+          )
+        }
+        {
+          uniquenessParagraphs.length > 0 && (
+            <div class="profile-narrative-block">
+              <h3>Keunikan usaha</h3>
+              <div class="prose">
+                {uniquenessParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+              </div>
+            </div>
+          )
+        }
+      </section>
+
+      <section class="detail-section">
+        <p class="eyebrow">Produk unggulan</p>
+        <h2>Produk yang diperkenalkan oleh usaha.</h2>
+        {
+          products.length ? (
+            <div class="product-grid">
+              {products.map((product) => <ProductCard product={product} />)}
+            </div>
+          ) : (
+            <InfoBox title="Produk belum tersedia">
+              Data produk aktif yang terhubung dengan UMKM ini belum ditemukan.
+            </InfoBox>
+          )
+        }
+      </section>
+
+      <section class="detail-section">
+        <p class="eyebrow">Pendampingan KKN</p>
+        <h2>Bentuk dukungan yang dicatat.</h2>
+        <ul class="assistance-list">
+          {item.assistance.map((assistance) => <li>{assistance}</li>)}
+        </ul>
+        <p>
+          Daftar ini menunjukkan bentuk pendampingan pada metadata, bukan bukti bahwa seluruh
+          bantuan atau dampak sudah terealisasi.
+        </p>
+      </section>
+
+      <AidSummary items={[]} title="Bantuan fisik yang terverifikasi" />
+
+      <section class="detail-section">
+        <p class="eyebrow">Dampak pendampingan</p>
+        <h2>Perubahan yang perlu dibuktikan.</h2>
+        {
+          impactParagraphs.length > 0 ? (
+            <div class="prose">
+              {impactParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+            </div>
+          ) : (
+            <InfoBox title="Data dampak belum tersedia">
+              Dampak seperti peningkatan penjualan, jangkauan promosi, atau kualitas kemasan baru
+              akan ditampilkan jika ada data realisasi yang dapat diverifikasi.
+            </InfoBox>
+          )
+        }
+      </section>
+
+      <QRCodeCard catalogUrl={item.catalogUrl} qrisImage={item.qrisImage} name={item.name} />
+
+      <section class="detail-section">
+        <p class="eyebrow">Lokasi</p>
+        <h2>Alamat usaha.</h2>
+        <MapEmbed embedUrl={item.mapsEmbed} address={item.address} label={item.name} />
+      </section>
+
+      {galleryImages.length > 0 && <ImageGallery images={galleryImages} title="Galeri produk" />}
+
+      <RelatedContent
+        title="UMKM lain dari kelompok ini"
+        items={related.map((relatedItem) => ({
+          href: `/umkm/${relatedItem.groupId}/${relatedItem.slug}`,
+          title: relatedItem.name,
+          description: relatedItem.shortDescription,
+          label: relatedItem.category,
+        }))}
+      />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .profile-header {
+    padding-block: var(--space-5) clamp(var(--space-7), 8vw, var(--space-9));
+    background:
+      radial-gradient(circle at 88% 18%, rgb(124 185 232 / 19%), transparent 20rem),
+      linear-gradient(180deg, rgb(255 255 255 / 60%), transparent);
+  }
+
+  .profile-header__grid {
+    display: grid;
+    margin-top: var(--space-6);
+    align-items: center;
+    gap: var(--space-7);
+  }
+
+  .profile-header__copy {
+    display: grid;
+    max-width: 44rem;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .profile-header__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .profile-header__badges > span {
+    padding: 0.22rem 0.62rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    background: var(--color-surface-soft);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+  }
+
+  h1 {
+    max-width: 17ch;
+    font-size: var(--font-size-3xl);
+    letter-spacing: -0.035em;
+  }
+
+  .profile-header__tagline {
+    color: #2f6f9d;
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-style: italic;
+  }
+
+  .profile-header__description {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+  }
+
+  dl {
+    display: grid;
+    width: 100%;
+    margin: var(--space-2) 0 0;
+    gap: var(--space-3);
+  }
+
+  dl div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  dt {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  .profile-header__grid > img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+    background: var(--color-surface-soft);
+    box-shadow: var(--shadow-md);
+  }
+
+  .product-grid {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .profile-narrative-block {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .profile-narrative-block h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  .assistance-list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+  }
+
+  .assistance-list li {
+    padding: 0.45rem 0.78rem;
+    border-radius: var(--radius-pill);
+    color: #2f6f9d;
+    background: var(--color-primary-soft);
+    font-size: var(--font-size-sm);
+    font-weight: 750;
+  }
+
+  @media (min-width: 40rem) {
+    dl,
+    .product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .profile-header__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(24rem, 0.85fr);
+    }
+
+    .product-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

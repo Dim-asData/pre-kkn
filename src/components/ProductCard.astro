@@ -1,0 +1,70 @@
+---
+import type { ProductData } from '../data/types';
+import { photoUrl } from '../lib/photos';
+
+interface Props {
+  product: ProductData;
+}
+
+const { product } = Astro.props;
+---
+
+<article class="product-card">
+  <img
+    src={photoUrl(product.photo)}
+    alt={product.photo ? `Foto ${product.name}` : `[DUMMY] Placeholder foto ${product.name}`}
+    width="1200"
+    height="900"
+    loading="lazy"
+    decoding="async"
+  />
+  <div>
+    <h3>{product.name}</h3>
+    {product.description && <p>{product.description}</p>}
+    <span>{product.price ?? 'Harga belum dicantumkan'}</span>
+  </div>
+</article>
+
+<style>
+  .product-card {
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--color-surface-soft);
+  }
+
+  article > div {
+    display: grid;
+    padding: var(--space-4);
+    align-content: start;
+    gap: var(--space-2);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  span {
+    width: fit-content;
+    padding: 0.2rem 0.58rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    background: var(--color-surface-soft);
+    font-size: var(--font-size-xs);
+    font-weight: 750;
+  }
+</style>

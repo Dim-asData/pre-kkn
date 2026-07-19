@@ -1,0 +1,215 @@
+---
+interface FilterOption {
+  value: string;
+  label: string;
+}
+
+interface FilterGroup {
+  key: string;
+  label: string;
+  options: FilterOption[];
+}
+
+interface Props {
+  groups: FilterGroup[];
+  resultLabel?: string;
+}
+
+const { groups, resultLabel = 'konten' } = Astro.props;
+---
+
+<form class="filter-bar" data-filter-bar data-result-label={resultLabel}>
+  {
+    groups.map((group) => (
+      <fieldset>
+        <legend>{group.label}</legend>
+        <div class="filter-bar__options">
+          <button
+            type="button"
+            data-filter-key={group.key}
+            data-filter-value=""
+            aria-pressed="true"
+          >
+            Semua
+          </button>
+          {group.options.map((option) => (
+            <button
+              type="button"
+              data-filter-key={group.key}
+              data-filter-value={option.value}
+              aria-pressed="false"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+    ))
+  }
+  <p class="filter-bar__result" data-filter-result aria-live="polite"></p>
+</form>
+
+<script>
+  const initialiseFilters = () => {
+    document.querySelectorAll<HTMLElement>('[data-filter-root]').forEach((root) => {
+      if (root.dataset.filterReady === 'true') return;
+
+      const bar = root.querySelector<HTMLFormElement>('[data-filter-bar]');
+      const items = [...root.querySelectorAll<HTMLElement>('[data-filter-item]')];
+      const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+      const result = root.querySelector<HTMLElement>('[data-filter-result]');
+      if (!bar) return;
+
+      root.dataset.filterReady = 'true';
+      const keys = [
+        ...new Set(
+          [...bar.querySelectorAll<HTMLButtonElement>('[data-filter-key]')]
+            .map((button) => button.dataset.filterKey)
+            .filter((key): key is string => Boolean(key)),
+        ),
+      ];
+      const state = Object.fromEntries(keys.map((key) => [key, ''])) as Record<string, string>;
+      const params = new URLSearchParams(window.location.search);
+
+      keys.forEach((key) => {
+        const requested = params.get(key) ?? '';
+        const matchingButton = bar.querySelector<HTMLButtonElement>(
+          `[data-filter-key="${CSS.escape(key)}"][data-filter-value="${CSS.escape(requested)}"]`,
+        );
+        if (matchingButton) state[key] = requested;
+      });
+
+      const render = () => {
+        let visibleCount = 0;
+
+        items.forEach((item) => {
+          const visible = keys.every((key) => {
+            const selected = state[key];
+            if (!selected) return true;
+            const values = (item.getAttribute(`data-filter-${key}`) ?? '').split('|');
+            return values.includes(selected);
+          });
+
+          item.hidden = !visible;
+          if (visible) visibleCount += 1;
+        });
+
+        bar.querySelectorAll<HTMLButtonElement>('[data-filter-key]').forEach((button) => {
+          const key = button.dataset.filterKey ?? '';
+          const value = button.dataset.filterValue ?? '';
+          button.setAttribute('aria-pressed', String(state[key] === value));
+        });
+
+        if (empty) empty.hidden = visibleCount !== 0;
+        if (result) {
+          const label = bar.dataset.resultLabel ?? 'konten';
+          result.textContent = `${visibleCount} ${label} ditampilkan`;
+        }
+
+        const nextParams = new URLSearchParams(window.location.search);
+        keys.forEach((key) => {
+          if (state[key]) nextParams.set(key, state[key]);
+          else nextParams.delete(key);
+        });
+        const query = nextParams.toString();
+        history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+      };
+
+      bar.addEventListener('click', (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>('[data-filter-key]');
+        if (!button) return;
+        state[button.dataset.filterKey ?? ''] = button.dataset.filterValue ?? '';
+        render();
+      });
+
+      render();
+    });
+  };
+
+  initialiseFilters();
+  document.addEventListener('astro:page-load', initialiseFilters);
+</script>
+
+<style>
+  .filter-bar {
+    display: grid;
+    margin-bottom: var(--space-6);
+    padding: var(--space-4);
+    gap: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 76%);
+    box-shadow: var(--shadow-sm);
+  }
+
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .filter-bar__options {
+    display: flex;
+    max-width: 100%;
+    padding-bottom: var(--space-1);
+    overflow-x: auto;
+    gap: var(--space-2);
+    scrollbar-width: thin;
+  }
+
+  button {
+    min-height: 2.75rem;
+    padding: 0.55rem 0.92rem;
+    flex: 0 0 auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast),
+      background var(--transition-fast);
+  }
+
+  button:hover {
+    border-color: var(--color-primary-dark);
+    color: var(--color-dark);
+  }
+
+  button[aria-pressed='true'] {
+    border-color: var(--color-primary-dark);
+    color: var(--color-dark);
+    background: var(--color-primary);
+  }
+
+  .filter-bar__result {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 650;
+  }
+
+  @media (min-width: 64rem) {
+    .filter-bar {
+      padding: var(--space-5);
+      grid-template-columns: repeat(3, minmax(0, auto));
+      align-items: end;
+    }
+
+    .filter-bar__result {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

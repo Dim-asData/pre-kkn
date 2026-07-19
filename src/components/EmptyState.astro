@@ -1,0 +1,64 @@
+---
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<div class="empty-state">
+  <span class="empty-state__icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48">
+      <path d="M11 15.5h26v22H11z" />
+      <path d="m16 15.5 3.2-5h9.6l3.2 5M17 25h14M17 31h9" />
+    </svg>
+  </span>
+  <div>
+    <h2>{title}</h2>
+    <p>{description}</p>
+  </div>
+  <slot />
+</div>
+
+<style>
+  .empty-state {
+    display: grid;
+    max-width: 42rem;
+    padding: clamp(var(--space-5), 6vw, var(--space-7));
+    justify-items: start;
+    gap: var(--space-4);
+    border: 1px dashed #c7c1b4;
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 62%);
+  }
+
+  .empty-state__icon {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-primary-dark);
+    background: var(--color-primary-soft);
+  }
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+  }
+
+  h2 {
+    margin-bottom: var(--space-2);
+    font-size: var(--font-size-xl);
+  }
+
+  p {
+    color: var(--color-text-muted);
+  }
+</style>

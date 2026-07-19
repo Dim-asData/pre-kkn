@@ -1,17 +1,544 @@
 ---
+import ActivityCard from '../components/ActivityCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import GroupBadge from '../components/GroupBadge.astro';
+import GroupCard from '../components/GroupCard.astro';
+import HeroSection from '../components/HeroSection.astro';
+import ImageGallery from '../components/ImageGallery.astro';
+import PrimaryButton from '../components/PrimaryButton.astro';
+import SecondaryButton from '../components/SecondaryButton.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import TextLink from '../components/TextLink.astro';
+import UMKMCard from '../components/UMKMCard.astro';
+import {
+  buildActivityDetails,
+  buildActivityGallery,
+  loadSheetsData,
+  publicSheetsData,
+  type ActivityDetail,
+  type ContentStatus,
+} from '../data';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
+const loadedSheets = await loadSheetsData();
+const data = publicSheetsData(loadedSheets.data);
+loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+
+const activities = buildActivityDetails(data).sort((a, b) => {
+  const aDate = a.actualDate ?? a.plannedDate ?? '9999-12-31';
+  const bDate = b.actualDate ?? b.plannedDate ?? '9999-12-31';
+  return aDate.localeCompare(bDate) || a.title.localeCompare(b.title, 'id');
+});
+const featuredActivities = activities.slice(0, 3);
+const featuredUmkm = data.umkm
+  .filter(
+    (item, index, entries) =>
+      entries.findIndex((candidate) => candidate.groupId === item.groupId) === index,
+  )
+  .slice(0, 3);
+const featuredEducationActivities = activities
+  .filter(({ category }) => category === 'education')
+  .slice(0, 2);
+const galleryImages = buildActivityGallery(activities).slice(0, 6).map((image) => ({
+  src: image.src,
+  alt: image.alt,
+  caption: image.caption,
+  href: image.activityHref,
+}));
+
+const statusForPrograms = (programs: ActivityDetail[]): ContentStatus => {
+  if (programs.some(({ status }) => status === 'ongoing')) return 'ongoing';
+  if (programs.length > 0 && programs.every(({ status }) => status === 'completed')) {
+    return 'completed';
+  }
+  if (programs.length > 0 && programs.every(({ status }) => status === 'cancelled')) {
+    return 'cancelled';
+  }
+  return 'planned';
+};
+const programGroups = data.groups
+  .map((group) => {
+    const programs = activities.filter(({ groupId }) => groupId === group.id);
+    return { id: group.id, group, programs, status: statusForPrograms(programs) };
+  })
+  .filter(({ programs }) => programs.length > 0);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+  <HeroSection
+    eyebrow="KKN Budi Luhur University · Kecamatan Pancalang"
+    title="Cerita, karya, dan pengabdian dari tiga desa."
+    description="Ruang dokumentasi kegiatan, pendampingan UMKM, dan program edukasi di Sumbakeling, Silebu, serta Pancalang—disajikan dengan hangat, jujur, dan mudah dipahami."
+    primaryAction={{ href: '/kegiatan', label: 'Jelajahi kegiatan' }}
+    secondaryAction={{ href: '#kelompok', label: 'Kenali tiga kelompok' }}
+  />
+
+  <section class="section groups-section" id="kelompok">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Tiga kelompok, satu jejak</p>
+        <h2>Program yang tumbuh dari kebutuhan setiap desa.</h2>
+        <p>
+          Setiap kelompok membawa fokus berbeda. Jumlah kegiatan di bawah selalu dihitung dari
+          artikel yang sudah tersedia, bukan dari angka perkiraan.
+        </p>
+      </div>
+      {
+        data.groups.length ? (
+          <div class="overview-grid overview-grid--three">
+            {data.groups.map((group) => (
+              <GroupCard
+                group={group}
+                activityCount={activities.filter(({ groupId }) => groupId === group.id).length}
+                umkmCount={data.umkm.filter(({ groupId }) => groupId === group.id).length}
+                educationCount={
+                  activities.filter(
+                    ({ groupId, category }) => groupId === group.id && category === 'education',
+                  ).length
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="Ringkasan kelompok belum dapat dimuat"
+            description="Data kelompok dari Google Sheets sedang tidak tersedia. Halaman tetap aman dan dapat dibangun kembali saat koneksi pulih."
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section program-map-section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">Peta rencana program</p>
+        <h2>{activities.length} rangkaian utama dari tiga desa.</h2>
+        <p>
+          Judul dan status setiap rangkaian dibaca dari Google Sheets. Data rencana tetap dibedakan
+          dari realisasi sampai bukti pelaksanaannya diverifikasi.
+        </p>
+      </div>
+      {
+        programGroups.length > 0 ? (
+          <div
+            class="program-map"
+            aria-label="Rencana program yang dikerjakan paralel oleh T1, T2, dan T3"
+          >
+            {programGroups.map(({ id, group, programs, status }) => (
+              <article class:list={['program-group', `program-group--${id}`]}>
+                <header>
+                  <div class="program-group__badges">
+                    <GroupBadge kelompok={id} />
+                    <StatusBadge status={status} />
+                  </div>
+                  <div>
+                    <h3>
+                      <a href={`/kegiatan?kelompok=${id}`}>{group.village}</a>
+                    </h3>
+                    <p>{programs.length} rangkaian program</p>
+                  </div>
+                </header>
+                <ul aria-label={`Program ${id.toUpperCase()}`}>
+                  {programs.map((program) => (
+                    <li>
+                      <a
+                        href={`/kegiatan?kelompok=${id}&kategori=${program.category}`}
+                        aria-label={`${program.title} — lihat kegiatan ${id.toUpperCase()}`}
+                      >
+                        <span class="program-group__marker" aria-hidden="true"></span>
+                        <span class="program-group__program-title">{program.title}</span>
+                        <span class="program-group__arrow" aria-hidden="true">→</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="Peta program belum dapat dimuat"
+            description="Metadata T1, T2, dan T3 tetap dibaca dari Google Sheets agar nama kelompok dan desa tidak dipelihara di dua sumber."
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading section-heading--with-link">
+        <div>
+          <p class="eyebrow">Kegiatan</p>
+          <h2>Kegiatan terbaru atau yang paling dekat.</h2>
+          <p>Rencana dan realisasi selalu dibedakan melalui badge status serta pilihan tanggal.</p>
+        </div>
+        <TextLink href="/kegiatan">Lihat semua kegiatan</TextLink>
+      </div>
+      {
+        featuredActivities.length ? (
+          <div class="overview-grid overview-grid--three">
+            {featuredActivities.map((activity) => <ActivityCard activity={activity} />)}
+          </div>
+        ) : (
+          <EmptyState
+            title="Artikel kegiatan belum tersedia"
+            description="Belum ada artikel kegiatan aktif yang dapat ditampilkan. Konten rencana tidak akan ditulis seolah-olah sudah terlaksana."
+          >
+            <SecondaryButton href="/kegiatan">Buka overview kegiatan</SecondaryButton>
+          </EmptyState>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section umkm-section">
+    <div class="container">
+      <div class="section-heading section-heading--with-link">
+        <div>
+          <p class="eyebrow">UMKM binaan</p>
+          <h2>Usaha lokal, proses belajar, dan identitas yang bertumbuh.</h2>
+          <p>Direktori dirancang agar tetap nyaman ketika jumlah UMKM bertambah, terutama di T3.</p>
+        </div>
+        <TextLink href="/umkm">Jelajahi direktori UMKM</TextLink>
+      </div>
+      {
+        featuredUmkm.length ? (
+          <div class="overview-grid overview-grid--three">
+            {featuredUmkm.map((item) => (
+              <UMKMCard
+                item={item}
+                group={data.groups.find(({ id }) => id === item.groupId)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="Profil UMKM belum dapat ditampilkan"
+            description="Hanya data berstatus verified dan aktif yang boleh muncul di direktori publik."
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section education-section">
+    <div class="container education-feature">
+      <div class="education-feature__intro">
+        <p class="eyebrow">Kegiatan edukasi</p>
+        <h2>Belajar aman, aktif, dan dekat dengan keseharian anak.</h2>
+        <p>
+          Sekolah, guru, dan peserta didik didokumentasikan sebagai lokasi, mitra, atau penerima
+          manfaat di dalam artikel kegiatan; bukan sebagai profil promosi terpisah.
+        </p>
+        <PrimaryButton href="/kegiatan?kategori=education">Lihat kegiatan edukasi</PrimaryButton>
+      </div>
+      {
+        featuredEducationActivities.length ? (
+          <div class="overview-grid">
+            {featuredEducationActivities.map((activity) => <ActivityCard activity={activity} />)}
+          </div>
+        ) : (
+          <EmptyState
+            title="Kegiatan edukasi belum tersedia"
+            description="Artikel kegiatan edukasi aktif akan tampil di bagian ini setelah tersedia."
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      {
+        galleryImages.length ? (
+          <>
+            <ImageGallery images={galleryImages} title="Potongan cerita dari tiga kelompok" />
+            <div class="gallery-link"><TextLink href="/galeri">Buka galeri lengkap</TextLink></div>
+          </>
+        ) : (
+          <EmptyState
+            title="Galeri kegiatan belum tersedia"
+            description="Foto akan muncul setelah gambar ditambahkan ke artikel kegiatan aktif."
+          />
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <div>
+          <p class="eyebrow">Jejak yang diperbarui bersama</p>
+          <h2>Ikuti rencana, proses, dan hasil kegiatan dari satu tempat.</h2>
+          <p>
+            Website ini diperbarui rutin setelah kelompok menyelesaikan program dan data lapangan
+            selesai diperiksa.
+          </p>
+        </div>
+        <PrimaryButton href="/kegiatan">Jelajahi kegiatan</PrimaryButton>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .groups-section,
+  .education-section {
+    background: rgb(255 255 255 / 50%);
+  }
+
+  .program-map-section {
+    background: var(--color-surface-soft);
+  }
+
+  .program-map-section .section-heading {
+    margin-inline: auto;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .section-heading--with-link {
+    max-width: none;
+  }
+
+  .section-heading--with-link > div {
+    display: grid;
+    max-width: 44rem;
+    gap: var(--space-3);
+  }
+
+  .program-map {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .program-group {
+    display: flex;
+    min-width: 0;
+    overflow: hidden;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .program-group header {
+    display: grid;
+    padding: var(--space-5);
+    gap: var(--space-3);
+    border-top: 4px solid transparent;
+  }
+
+  .program-group--t1 header {
+    border-top-color: var(--color-t1);
+    background: linear-gradient(135deg, var(--color-t1-soft), var(--color-surface) 76%);
+  }
+
+  .program-group--t2 header {
+    border-top-color: var(--color-t2);
+    background: linear-gradient(135deg, var(--color-t2-soft), var(--color-surface) 76%);
+  }
+
+  .program-group--t3 header {
+    border-top-color: var(--color-t3);
+    background: linear-gradient(135deg, var(--color-t3-soft), var(--color-surface) 76%);
+  }
+
+  .program-group__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .program-group header > div:last-child {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .program-group h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  .program-group h3 a {
+    color: inherit;
+    text-decoration: none;
+    text-underline-offset: 0.2em;
+  }
+
+  .program-group h3 a:hover {
+    text-decoration: underline;
+  }
+
+  .program-group h3 a:focus-visible {
+    border-radius: var(--radius-sm);
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  .program-group header p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+  }
+
+  .program-group ul {
+    display: grid;
+    margin: 0;
+    padding: 0 var(--space-5) var(--space-3);
+    flex: 1;
+    list-style: none;
+  }
+
+  .program-group li {
+    min-width: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .program-group li a {
+    display: grid;
+    min-width: 0;
+    margin-inline: calc(0rem - var(--space-2));
+    padding: var(--space-4) var(--space-2);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-content: center;
+    align-items: start;
+    gap: var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--color-dark);
+    text-decoration: none;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .program-group li a:hover {
+    background: var(--color-surface-soft);
+  }
+
+  .program-group li a:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  .program-group__marker {
+    width: 0.35rem;
+    height: 2rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+  }
+
+  .program-group--t1 .program-group__marker {
+    background: var(--color-t1);
+  }
+
+  .program-group--t2 .program-group__marker {
+    background: var(--color-t2);
+  }
+
+  .program-group--t3 .program-group__marker {
+    background: var(--color-t3);
+  }
+
+  .program-group__program-title {
+    font-size: var(--font-size-sm);
+    font-weight: 750;
+    line-height: 1.5;
+  }
+
+  .program-group__arrow {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+    line-height: 1.25;
+    transition: transform var(--transition-fast);
+  }
+
+  .program-group li a:hover .program-group__arrow {
+    transform: translateX(0.2rem);
+  }
+
+  .education-feature {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  .education-feature__intro {
+    display: grid;
+    max-width: 35rem;
+    align-content: center;
+    justify-items: start;
+    gap: var(--space-4);
+  }
+
+  .education-feature__intro h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .education-feature__intro > p:not(.eyebrow) {
+    color: var(--color-text-muted);
+  }
+
+  .gallery-link {
+    margin-top: var(--space-4);
+  }
+
+  .cta-section {
+    padding-top: 0;
+  }
+
+  .cta-card {
+    display: grid;
+    padding: clamp(var(--space-5), 7vw, var(--space-8));
+    gap: var(--space-5);
+    border: 1px solid rgb(79 143 190 / 20%);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at 90% 20%, rgb(255 255 255 / 62%), transparent 14rem),
+      var(--color-primary-soft);
+  }
+
+  .cta-card > div {
+    display: grid;
+    max-width: 44rem;
+    gap: var(--space-3);
+  }
+
+  .cta-card h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .cta-card p:not(.eyebrow) {
+    color: var(--color-text-muted);
+  }
+
+  @media (min-width: 48rem) {
+    .section-heading--with-link {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+    }
+
+    .program-map {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .program-group ul {
+      grid-auto-rows: 1fr;
+    }
+
+    .cta-card {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .education-feature {
+      grid-template-columns: minmax(18rem, 0.7fr) minmax(0, 1.3fr);
+    }
+  }
+</style>

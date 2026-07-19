@@ -1,0 +1,47 @@
+---
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const siteName = import.meta.env.PUBLIC_SITE_NAME?.trim() || 'Jejak KKN Pancalang';
+const siteDescription =
+  import.meta.env.PUBLIC_SITE_DESCRIPTION?.trim() ||
+  'Dokumentasi kegiatan, promosi UMKM, dan implementasi program CSR KKN di Kecamatan Pancalang.';
+const { title, description = siteDescription, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} | ${siteName}` : siteName;
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>{pageTitle}</title>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#konten-utama">Lewati ke konten utama</a>
+    <Header pathname={Astro.url.pathname} />
+    <main id="konten-utama">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

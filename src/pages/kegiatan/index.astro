@@ -1,0 +1,112 @@
+---
+import ActivityCard from '../../components/ActivityCard.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import FilterBar from '../../components/FilterBar.astro';
+import { buildActivityDetails, loadSheetsData, publicSheetsData } from '../../data';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const loadedSheets = await loadSheetsData();
+loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+const data = publicSheetsData(loadedSheets.data);
+const activities = buildActivityDetails(data).sort((a, b) => {
+  const aDate = a.actualDate ?? a.plannedDate ?? '9999-12-31';
+  const bDate = b.actualDate ?? b.plannedDate ?? '9999-12-31';
+  return aDate.localeCompare(bDate) || a.title.localeCompare(b.title, 'id');
+});
+
+const filterGroups = [
+  {
+    key: 'kelompok',
+    label: 'Kelompok',
+    options: data.groups.map(({ id, village }) => ({
+      value: id,
+      label: `${id.toUpperCase()} · ${village.replace(/^Desa\s+/i, '')}`,
+    })),
+  },
+  {
+    key: 'kategori',
+    label: 'Jenis program',
+    options: [
+      { value: 'umkm', label: 'UMKM' },
+      { value: 'education', label: 'Edukasi' },
+      { value: 'aid_distribution', label: 'Penyerahan Bantuan' },
+      { value: 'supporting', label: 'Program Pendukung' },
+    ],
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    options: [
+      { value: 'planned', label: 'Rencana' },
+      { value: 'ongoing', label: 'Berlangsung' },
+      { value: 'completed', label: 'Terlaksana' },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Kegiatan"
+  description="Rencana, proses, dan dokumentasi kegiatan KKN dari kelompok T1, T2, dan T3 di Kecamatan Pancalang."
+>
+  <section class="page-intro">
+    <div class="page-intro__inner container">
+      <p class="eyebrow">Arsip kegiatan</p>
+      <h1>Rencana, proses, dan hasil yang ditulis apa adanya.</h1>
+      <p class="page-intro__description">
+        Setiap kegiatan memisahkan data rencana dan realisasi. Badge “Rencana” berarti kegiatan
+        belum boleh dibaca sebagai sesuatu yang sudah terlaksana.
+      </p>
+      <p class="page-intro__meta">
+        <strong>{activities.length} kegiatan</strong>
+        <span aria-hidden="true">·</span>
+        <span>Dihitung langsung dari data kegiatan aktif di Google Sheets</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" data-filter-root>
+      {
+        activities.length ? (
+          <>
+            <FilterBar groups={filterGroups} resultLabel="kegiatan" />
+            <div class="overview-grid overview-grid--three">
+              {activities.map((activity) => (
+                <div
+                  data-filter-item
+                  data-filter-kelompok={activity.groupId}
+                  data-filter-kategori={activity.category}
+                  data-filter-status={activity.status}
+                >
+                  <ActivityCard activity={activity} />
+                </div>
+              ))}
+            </div>
+            <div hidden data-filter-empty class="filtered-empty">
+              <EmptyState
+                title="Belum ada kegiatan untuk filter ini"
+                description="Coba pilih kelompok, jenis program, atau status yang lain."
+              />
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            title="Artikel kegiatan belum tersedia"
+            description="Belum ada kegiatan aktif dan terverifikasi yang dapat dibaca dari Google Sheets."
+          />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  [data-filter-item] {
+    min-width: 0;
+  }
+
+  .filtered-empty {
+    margin-top: var(--space-6);
+  }
+</style>

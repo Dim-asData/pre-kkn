@@ -1,0 +1,116 @@
+---
+interface AidItem {
+  name: string;
+  amount?: number | null;
+  unit?: string;
+  status?: 'planned' | 'completed';
+}
+
+interface Props {
+  items: AidItem[];
+  title?: string;
+}
+
+const { items, title = 'Bantuan fisik dan alat edukatif' } = Astro.props;
+---
+
+<section class="aid-summary" aria-labelledby="aid-summary-title">
+  <div>
+    <p class="eyebrow">Sarana pendukung</p>
+    <h2 id="aid-summary-title">{title}</h2>
+  </div>
+  {
+    items.length ? (
+      <ul>
+        {items.map((item) => (
+          <li>
+            <div>
+              <strong>{item.name}</strong>
+              <span class:list={[item.status === 'completed' && 'is-completed']}>
+                {item.status === 'completed' ? 'Terverifikasi tersalurkan' : 'Rencana'}
+              </span>
+            </div>
+            <p>
+              {item.amount === null || item.amount === undefined
+                ? 'Jumlah belum ditentukan'
+                : `${item.amount} ${item.unit ?? 'unit'}`}
+            </p>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="aid-summary__empty">
+        Belum ada data penyaluran bantuan yang dapat ditampilkan.
+      </p>
+    )
+  }
+</section>
+
+<style>
+  .aid-summary {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .aid-summary > div:first-child {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    gap: var(--space-3);
+    list-style: none;
+  }
+
+  li {
+    display: grid;
+    padding: var(--space-4);
+    gap: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  li > div {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  li span {
+    padding: 0.18rem 0.55rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+  }
+
+  li span.is-completed {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+
+  li p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .aid-summary__empty {
+    padding: var(--space-5);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    background: rgb(255 255 255 / 56%);
+  }
+</style>

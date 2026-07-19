@@ -1,0 +1,59 @@
+---
+import {
+  activityRoute,
+  buildActivityDetails,
+  loadSheetsData,
+  publicSheetsData,
+  sortActivities,
+  type ActivityDetail,
+} from '../../../data';
+import { CATEGORY_LABELS } from '../../../data/format';
+import ArticleLayout from '../../../layouts/ArticleLayout.astro';
+
+interface Props {
+  activity: ActivityDetail;
+  previous: ActivityDetail | null;
+  next: ActivityDetail | null;
+  related: ActivityDetail[];
+}
+
+export async function getStaticPaths() {
+  const loadedSheets = await loadSheetsData();
+  loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+  const data = publicSheetsData(loadedSheets.data);
+  const activities = sortActivities(buildActivityDetails(data));
+
+  return activities.map((activity, index) => ({
+    params: {
+      kelompok: activity.groupId,
+      slug: activity.slug,
+    },
+    props: {
+      activity,
+      previous: activities[index - 1] ?? null,
+      next: activities[index + 1] ?? null,
+      related: activities
+        .filter(
+          (candidate) =>
+            candidate.id !== activity.id &&
+            (candidate.groupId === activity.groupId || candidate.category === activity.category),
+        )
+        .slice(0, 2),
+    },
+  }));
+}
+
+const { activity, previous, next, related } = Astro.props;
+---
+
+<ArticleLayout
+  activity={activity}
+  previous={previous ? { href: activityRoute(previous), title: previous.title } : null}
+  next={next ? { href: activityRoute(next), title: next.title } : null}
+  related={related.map((candidate) => ({
+    href: activityRoute(candidate),
+    title: candidate.title,
+    description: candidate.shortDescription,
+    label: CATEGORY_LABELS[candidate.category],
+  }))}
+/>

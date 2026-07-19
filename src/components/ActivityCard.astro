@@ -1,0 +1,146 @@
+---
+import type { ActivityDetail } from '../data/types';
+import { CATEGORY_LABELS, formatDate } from '../data/format';
+import { photoUrl } from '../lib/photos';
+import GroupBadge from './GroupBadge.astro';
+import StatusBadge from './StatusBadge.astro';
+import TextLink from './TextLink.astro';
+
+interface Props {
+  activity: ActivityDetail;
+  eager?: boolean;
+}
+
+const { activity, eager = false } = Astro.props;
+const date = formatDate(activity.actualDate ?? activity.plannedDate);
+const outputSummary = activity.outputs.slice(0, 2).map(({ name }) => name).join(' · ');
+const href = `/kegiatan/${activity.groupId}/${activity.slug}`;
+const heroReference = activity.heroPhoto?.driveFile ?? null;
+const usesPlaceholder = !heroReference;
+---
+
+<article class="activity-card">
+  <a class="activity-card__image-link" href={href} aria-label={`Baca ${activity.title}`}>
+    <img
+      src={photoUrl(heroReference)}
+      alt={
+        usesPlaceholder
+          ? `[DUMMY] Placeholder gambar untuk ${activity.title}`
+          : activity.heroPhoto?.alt || `Ilustrasi ${activity.title}`
+      }
+      width="1200"
+      height="675"
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+    />
+    {usesPlaceholder && <span>[DUMMY] Placeholder gambar</span>}
+  </a>
+  <div class="activity-card__body">
+    <div class="activity-card__badges">
+      <GroupBadge kelompok={activity.groupId} />
+      <StatusBadge status={activity.status} />
+    </div>
+    <p class="activity-card__meta">
+      <span>{CATEGORY_LABELS[activity.category]}</span>
+      <span aria-hidden="true">·</span>
+      <span>{date ?? 'Tanggal belum ditentukan'}</span>
+    </p>
+    <h3><a href={href}>{activity.title}</a></h3>
+    <p>{activity.shortDescription}</p>
+    <p class="activity-card__location">{activity.location}</p>
+    {outputSummary && <p class="activity-card__output">Output: {outputSummary}</p>}
+    <TextLink href={href}>Baca detail kegiatan</TextLink>
+  </div>
+</article>
+
+<style>
+  .activity-card {
+    display: grid;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  }
+
+  .activity-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+  }
+
+  .activity-card__image-link {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+  }
+
+  .activity-card__image-link > span {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-pill);
+    color: var(--color-surface);
+    background: rgb(30 42 48 / 82%);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    transition: transform var(--transition-fast);
+  }
+
+  .activity-card:hover img {
+    transform: scale(1.025);
+  }
+
+  .activity-card__body {
+    display: grid;
+    padding: var(--space-5);
+    align-content: start;
+    gap: var(--space-3);
+  }
+
+  .activity-card__badges,
+  .activity-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .activity-card__meta,
+  .activity-card__location,
+  .activity-card__output {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 650;
+  }
+
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  h3 a {
+    text-decoration: none;
+  }
+
+  h3 a:hover {
+    color: #2f6f9d;
+  }
+
+  .activity-card__body > p:not(.activity-card__meta, .activity-card__location, .activity-card__output) {
+    color: var(--color-text-muted);
+  }
+
+  .activity-card__output {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+</style>

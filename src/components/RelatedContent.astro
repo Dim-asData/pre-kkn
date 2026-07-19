@@ -1,0 +1,96 @@
+---
+interface RelatedItem {
+  href: string;
+  title: string;
+  description: string;
+  label?: string;
+}
+
+interface Props {
+  title?: string;
+  items: RelatedItem[];
+}
+
+const { title = 'Cerita terkait', items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="related-content" aria-labelledby="related-content-title">
+      <div>
+        <p class="eyebrow">Lanjut menjelajah</p>
+        <h2 id="related-content-title">{title}</h2>
+      </div>
+      <div class="related-content__grid">
+        {items.map((item) => (
+          <article>
+            {item.label && <p>{item.label}</p>}
+            <h3><a href={item.href}>{item.title}</a></h3>
+            <span>{item.description}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .related-content {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .related-content > div:first-child {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .related-content__grid {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  article {
+    display: grid;
+    padding: var(--space-4);
+    gap: var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  article > p {
+    color: #2f6f9d;
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  h3 a {
+    text-decoration: none;
+  }
+
+  h3 a:hover {
+    color: #2f6f9d;
+  }
+
+  article > span {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  @media (min-width: 44rem) {
+    .related-content__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

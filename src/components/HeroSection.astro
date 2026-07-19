@@ -1,0 +1,335 @@
+---
+import PrimaryButton from './PrimaryButton.astro';
+import SecondaryButton from './SecondaryButton.astro';
+
+interface Action {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  description: string;
+  primaryAction?: Action;
+  secondaryAction?: Action;
+}
+
+const { eyebrow, title, description, primaryAction, secondaryAction } = Astro.props;
+---
+
+<section class="hero-section">
+  <div class="hero-section__inner container">
+    <div class="hero-section__copy">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p class="hero-section__description">{description}</p>
+      {
+        (primaryAction || secondaryAction) && (
+          <div class="hero-section__actions">
+            {primaryAction && (
+              <PrimaryButton href={primaryAction.href}>{primaryAction.label}</PrimaryButton>
+            )}
+            {secondaryAction && (
+              <SecondaryButton href={secondaryAction.href}>{secondaryAction.label}</SecondaryButton>
+            )}
+          </div>
+        )
+      }
+    </div>
+
+    <div class="hero-section__visual">
+      <div class="hero-section__photo-frame">
+        <img
+          class="hero-section__photo hero-section__photo--main"
+          src="/pre/images-1.jpg"
+          alt="[DUMMY] Placeholder foto kegiatan bersama masyarakat di Kecamatan Pancalang"
+          width="800"
+          height="600"
+          decoding="async"
+          fetchpriority="high"
+        />
+        <img
+          class="hero-section__photo hero-section__photo--portrait"
+          src="/pre/images-2.jpg"
+          alt="[DUMMY] Placeholder foto pendampingan program kerja KKN"
+          width="600"
+          height="800"
+          decoding="async"
+        />
+        <img
+          class="hero-section__photo hero-section__photo--square"
+          src="/pre/images-3.jpg"
+          alt="[DUMMY] Placeholder foto kebersamaan mahasiswa dan warga"
+          width="600"
+          height="600"
+          decoding="async"
+        />
+      </div>
+      <span
+        class="hero-section__leaf-anchor hero-section__leaf-anchor--one"
+        aria-hidden="true"
+      >
+        <img
+          class="hero-section__leaf hero-section__leaf--one"
+          src="/leaf-1-transparent.png"
+          alt=""
+          width="1254"
+          height="1254"
+          decoding="async"
+        />
+      </span>
+      <span
+        class="hero-section__leaf-anchor hero-section__leaf-anchor--two"
+        aria-hidden="true"
+      >
+        <img
+          class="hero-section__leaf hero-section__leaf--two"
+          src="/leaf-2-transparent.png"
+          alt=""
+          width="1254"
+          height="1254"
+          decoding="async"
+        />
+      </span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-section {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(var(--space-7), 9vw, 7.5rem);
+  }
+
+  .hero-section::before {
+    position: absolute;
+    width: 28rem;
+    height: 28rem;
+    border-radius: 46% 54% 62% 38% / 43% 39% 61% 57%;
+    background: rgb(232 154 183 / 10%);
+    content: '';
+    inset: auto auto -18rem -14rem;
+    pointer-events: none;
+  }
+
+  .hero-section__inner {
+    display: grid;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .hero-section__copy {
+    display: grid;
+    max-width: 43rem;
+    justify-items: start;
+    gap: var(--space-5);
+  }
+
+  h1 {
+    max-width: 14ch;
+    font-size: var(--font-size-4xl);
+    letter-spacing: -0.045em;
+  }
+
+  .hero-section__description {
+    max-width: 40rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-lg);
+  }
+
+  .hero-section__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .hero-section__visual {
+    position: relative;
+    display: grid;
+    min-height: 23rem;
+    padding: clamp(var(--space-5), 7vw, var(--space-7));
+    align-content: center;
+    isolation: isolate;
+    transform-origin: center;
+    animation: hero-photo-frame-float 10s ease-in-out -2s infinite;
+    will-change: transform;
+  }
+
+  .hero-section__photo-frame {
+    position: absolute;
+    z-index: -2;
+    overflow: hidden;
+    border: 1px solid rgb(124 185 232 / 30%);
+    border-radius: 42% 58% 44% 56% / 55% 43% 57% 45%;
+    background: linear-gradient(145deg, #edf8fe, #dceff9 62%, #f5f0e4);
+    box-shadow: 0 1.25rem 3rem rgb(41 128 185 / 15%);
+    inset: 0;
+  }
+
+  .hero-section__photo-frame::after {
+    position: absolute;
+    background: linear-gradient(145deg, rgb(41 128 185 / 5%), rgb(245 240 228 / 16%));
+    content: '';
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .hero-section__photo {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    inset: 0;
+    object-fit: cover;
+    opacity: 0;
+    animation: hero-photo-crossfade 9s ease-in-out infinite;
+    will-change: opacity, transform;
+  }
+
+  .hero-section__photo--main {
+    animation-delay: 0s;
+  }
+
+  .hero-section__photo--portrait {
+    animation-delay: -6s;
+  }
+
+  .hero-section__photo--square {
+    animation-delay: -3s;
+  }
+
+  .hero-section__photo-badge {
+    position: absolute;
+    z-index: 1;
+    right: clamp(var(--space-4), 7%, var(--space-6));
+    bottom: clamp(var(--space-4), 7%, var(--space-6));
+    padding: 0.45rem 0.75rem;
+    border: 1px solid rgb(255 255 255 / 68%);
+    border-radius: var(--radius-pill);
+    color: var(--color-surface);
+    background: rgb(31 67 99 / 78%);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-section__leaf-anchor {
+    position: absolute;
+    z-index: -1;
+    width: clamp(4.5rem, 11vw, 7rem);
+    pointer-events: none;
+  }
+
+  .hero-section__leaf-anchor--one {
+    top: 0;
+    left: 8%;
+    transform: translateY(-80%);
+  }
+
+  .hero-section__leaf-anchor--two {
+    right: 8%;
+    bottom: 0;
+    width: clamp(4rem, 9vw, 6rem);
+    transform: translateY(80%);
+  }
+
+  .hero-section__leaf {
+    display: block;
+    width: 100%;
+    height: auto;
+    opacity: 0.78;
+    filter: drop-shadow(0 0.45rem 0.7rem rgb(85 107 47 / 14%));
+    will-change: transform;
+  }
+
+  .hero-section__leaf--one {
+    transform: rotate(-24deg);
+    animation: hero-leaf-one-float 7.5s ease-in-out -1s infinite;
+  }
+
+  .hero-section__leaf--two {
+    transform: rotate(38deg) scale(0.72);
+    animation: hero-leaf-two-float 9s ease-in-out -4s infinite;
+  }
+
+  @keyframes hero-photo-frame-float {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+    }
+
+    50% {
+      transform: translate3d(0, -0.45rem, 0) rotate(0.35deg) scale(1.008);
+    }
+  }
+
+  @keyframes hero-photo-crossfade {
+    0%,
+    27.778% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    33.333%,
+    94.444% {
+      opacity: 0;
+      transform: scale(1.025);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes hero-leaf-one-float {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(-24deg);
+    }
+
+    50% {
+      transform: translate3d(0.3rem, 0, 0) rotate(-18deg);
+    }
+  }
+
+  @keyframes hero-leaf-two-float {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(38deg) scale(0.72);
+    }
+
+    50% {
+      transform: translate3d(-0.4rem, 0, 0) rotate(44deg) scale(0.76);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-section__visual,
+    .hero-section__photo,
+    .hero-section__leaf {
+      animation: none;
+      will-change: auto;
+    }
+
+    .hero-section__photo {
+      opacity: 0;
+    }
+
+    .hero-section__photo--main {
+      opacity: 1;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .hero-section__inner {
+      grid-template-columns: minmax(0, 1.08fr) minmax(25rem, 0.92fr);
+    }
+
+    .hero-section__visual {
+      min-height: 30rem;
+    }
+  }
+</style>

@@ -1,17 +1,31 @@
 {
-  "name": "proper-phase",
+  "name": "KUNINGAN",
   "type": "module",
   "version": "0.0.1",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
+    "photos:sync": "node --env-file-if-exists=.env --experimental-strip-types scripts/sync-photos.ts",
+    "predev": "npm run photos:sync",
     "dev": "astro dev",
+    "prebuild": "npm run photos:sync",
     "build": "astro build",
+    "check": "astro check",
+    "test": "vitest run",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.1.0"
+    "@astrojs/check": "^0.9.9",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.1.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "sharp": "^0.35.3",
+    "vitest": "^4.1.10"
   }
 }

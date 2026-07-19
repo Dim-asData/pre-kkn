@@ -1,0 +1,131 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  placement: 'mobile' | 'desktop';
+}
+
+const { headings, placement } = Astro.props;
+const visibleHeadings = headings.filter(({ depth }) => depth === 2 || depth === 3);
+---
+
+{
+  visibleHeadings.length > 0 && (
+    <aside
+      class:list={['table-of-contents', `table-of-contents--${placement}`]}
+      data-toc-placement={placement}
+    >
+      <details open>
+        <summary>Daftar isi</summary>
+        <nav aria-label="Daftar isi artikel">
+          <ol>
+            {visibleHeadings.map((heading) => (
+              <li class:list={[heading.depth === 3 && 'is-nested']}>
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      </details>
+    </aside>
+  )
+}
+
+<style>
+  .table-of-contents {
+    min-width: 0;
+  }
+
+  .table-of-contents--desktop {
+    display: none;
+  }
+
+  details {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  summary {
+    display: flex;
+    min-height: 2.75rem;
+    padding: var(--space-3) var(--space-4);
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  summary::after {
+    content: '+';
+    font-size: var(--font-size-lg);
+  }
+
+  details[open] summary::after {
+    content: '–';
+  }
+
+  nav {
+    padding: 0 var(--space-4) var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  ol {
+    display: grid;
+    margin: 0;
+    padding: var(--space-3) 0 0;
+    gap: var(--space-1);
+    list-style: none;
+  }
+
+  a {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: #2f6f9d;
+  }
+
+  .is-nested a {
+    padding-left: var(--space-4);
+    font-size: var(--font-size-xs);
+  }
+
+  @media (min-width: 64rem) {
+    .table-of-contents--mobile {
+      display: none;
+    }
+
+    .table-of-contents--desktop {
+      display: block;
+      position: sticky;
+      top: var(--space-5);
+    }
+
+    summary {
+      cursor: default;
+    }
+
+    summary::after {
+      display: none;
+    }
+
+    details:not([open]) > nav {
+      display: block !important;
+    }
+  }
+</style>

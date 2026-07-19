@@ -1,0 +1,80 @@
+---
+interface NavigationItem {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  previous?: NavigationItem | null;
+  next?: NavigationItem | null;
+}
+
+const { previous, next } = Astro.props;
+---
+
+{
+  (previous || next) && (
+    <nav class="previous-next" aria-label="Navigasi kegiatan">
+      {previous ? (
+        <a href={previous.href} rel="prev">
+          <span>← Sebelumnya</span>
+          <strong>{previous.title}</strong>
+        </a>
+      ) : (
+        <span aria-hidden="true"></span>
+      )}
+      {next && (
+        <a class="previous-next__next" href={next.href} rel="next">
+          <span>Berikutnya →</span>
+          <strong>{next.title}</strong>
+        </a>
+      )}
+    </nav>
+  )
+}
+
+<style>
+  .previous-next {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  a {
+    display: grid;
+    min-width: 0;
+    min-height: 5rem;
+    padding: var(--space-4);
+    align-content: center;
+    gap: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    text-decoration: none;
+  }
+
+  a:hover {
+    border-color: var(--color-primary-dark);
+    background: var(--color-primary-soft);
+  }
+
+  a span {
+    color: #2f6f9d;
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+  }
+
+  a strong {
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .previous-next__next {
+    text-align: right;
+  }
+
+  @media (min-width: 42rem) {
+    .previous-next {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

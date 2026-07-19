@@ -1,0 +1,151 @@
+---
+const year = new Date().getFullYear();
+const navigation = [
+  { label: 'Kegiatan', href: '/kegiatan' },
+  { label: 'UMKM binaan', href: '/umkm' },
+  { label: 'Galeri', href: '/galeri' },
+];
+---
+
+<footer class="site-footer">
+  <div class="footer-inner container">
+    <div class="footer-intro">
+      <p class="footer-kicker">Jejak KKN Pancalang</p>
+      <h2>Cerita pengabdian dari tiga desa.</h2>
+      <p>
+        Arsip publik kegiatan KKN Budi Luhur University di Desa Sumbakeling, Silebu, dan
+        Pancalang.
+      </p>
+    </div>
+
+    <nav aria-label="Navigasi footer">
+      <p class="footer-label">Jelajahi</p>
+      <ul>
+        {navigation.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div>
+      <p class="footer-label">Kelompok</p>
+      <ul class="group-list">
+        <li><span class="dot dot--t1"></span>T1 · Sumbakeling</li>
+        <li><span class="dot dot--t2"></span>T2 · Silebu</li>
+        <li><span class="dot dot--t3"></span>T3 · Pancalang</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom container">
+    <p>© {year} KKN Budi Luhur University, Kecamatan Pancalang.</p>
+    <p>Data realisasi ditampilkan setelah terverifikasi.</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    padding-top: var(--space-8);
+    color: rgb(255 255 255 / 72%);
+    background: var(--color-dark);
+  }
+
+  .footer-inner {
+    display: grid;
+    padding-bottom: var(--space-7);
+    gap: var(--space-7);
+  }
+
+  .footer-intro {
+    display: grid;
+    max-width: 32rem;
+    gap: var(--space-3);
+  }
+
+  .footer-kicker,
+  .footer-label {
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    color: var(--color-surface);
+    font-size: var(--font-size-2xl);
+  }
+
+  nav,
+  .footer-inner > div:not(.footer-intro) {
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+  }
+
+  ul {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    gap: var(--space-2);
+    list-style: none;
+  }
+
+  a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    color: rgb(255 255 255 / 76%);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-surface);
+    text-decoration: underline;
+  }
+
+  .group-list li {
+    display: flex;
+    min-height: 2.25rem;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-size-sm);
+  }
+
+  .dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+  }
+
+  .dot--t1 {
+    background: var(--color-t1);
+  }
+
+  .dot--t2 {
+    background: #b75970;
+  }
+
+  .dot--t3 {
+    background: #9aae77;
+  }
+
+  .footer-bottom {
+    display: grid;
+    padding-block: var(--space-5);
+    gap: var(--space-2);
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    font-size: var(--font-size-xs);
+  }
+
+  @media (min-width: 48rem) {
+    .footer-inner {
+      grid-template-columns: minmax(0, 1.8fr) repeat(2, minmax(10rem, 0.6fr));
+    }
+
+    .footer-bottom {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+  }
+</style>

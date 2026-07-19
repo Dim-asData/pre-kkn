@@ -1,0 +1,80 @@
+---
+interface Props {
+  title?: string;
+  tone?: 'info' | 'planned' | 'success';
+}
+
+const { title = 'Catatan', tone = 'info' } = Astro.props;
+---
+
+<aside class:list={['info-box', `info-box--${tone}`]}>
+  <span class="info-box__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M12 10v6M12 7.4v.1"></path>
+    </svg>
+  </span>
+  <div>
+    <h2>{title}</h2>
+    <div class="info-box__content"><slot /></div>
+  </div>
+</aside>
+
+<style>
+  .info-box {
+    display: grid;
+    padding: var(--space-5);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3);
+    border: 1px solid rgb(79 143 190 / 28%);
+    border-radius: var(--radius-md);
+    background: var(--color-primary-soft);
+  }
+
+  .info-box--planned {
+    border-color: rgb(138 99 39 / 28%);
+    background: var(--color-warning-soft);
+  }
+
+  .info-box--success {
+    border-color: rgb(76 109 61 / 28%);
+    background: var(--color-success-soft);
+  }
+
+  .info-box__icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    color: #2f6f9d;
+  }
+
+  .info-box--planned .info-box__icon {
+    color: var(--color-warning);
+  }
+
+  .info-box--success .info-box__icon {
+    color: var(--color-success);
+  }
+
+  svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  h2 {
+    margin-bottom: var(--space-1);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+  }
+
+  .info-box__content {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+</style>

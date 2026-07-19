@@ -1,0 +1,68 @@
+---
+import type { ContentStatus } from '../data/types';
+
+interface Props {
+  status: ContentStatus;
+}
+
+const { status } = Astro.props;
+const labels: Record<ContentStatus, string> = {
+  draft: 'Draf',
+  planned: 'Rencana',
+  ongoing: 'Berlangsung',
+  completed: 'Terlaksana',
+  cancelled: 'Dibatalkan',
+};
+---
+
+<span class:list={['status-badge', `status-badge--${status}`]}>
+  <span aria-hidden="true"></span>
+  {labels[status]}
+</span>
+
+<style>
+  .status-badge {
+    display: inline-flex;
+    min-height: 1.75rem;
+    width: fit-content;
+    align-items: center;
+    padding: 0.22rem 0.68rem;
+    gap: 0.38rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .status-badge > span {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .status-badge--planned {
+    color: var(--color-warning);
+    background: var(--color-warning-soft);
+  }
+
+  .status-badge--draft {
+    color: var(--color-text-muted);
+    background: var(--color-surface-soft);
+  }
+
+  .status-badge--ongoing {
+    color: #2f6f9d;
+    background: var(--color-primary-soft);
+  }
+
+  .status-badge--completed {
+    color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+
+  .status-badge--cancelled {
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+</style>

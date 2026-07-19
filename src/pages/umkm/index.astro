@@ -1,0 +1,98 @@
+---
+import EmptyState from '../../components/EmptyState.astro';
+import FilterBar from '../../components/FilterBar.astro';
+import UMKMCard from '../../components/UMKMCard.astro';
+import { loadSheetsData } from '../../data/sheets';
+import { publicSheetsData } from '../../data/validate';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const loadedSheets = await loadSheetsData();
+loadedSheets.warnings.forEach((warning) => console.warn(`[Google Sheets] ${warning}`));
+const data = publicSheetsData(loadedSheets.data);
+const categories = [...new Set(data.umkm.map(({ category }) => category))].sort((a, b) =>
+  a.localeCompare(b, 'id'),
+);
+const filterGroups = [
+  {
+    key: 'kelompok',
+    label: 'Kelompok',
+    options: data.groups.map(({ id, village }) => ({
+      value: id,
+      label: `${id.toUpperCase()} · ${village.replace(/^Desa\s+/i, '')}`,
+    })),
+  },
+  {
+    key: 'kategori',
+    label: 'Kategori usaha',
+    options: categories.map((category) => ({ value: category, label: category })),
+  },
+];
+---
+
+<BaseLayout
+  title="UMKM Binaan"
+  description="Direktori UMKM binaan KKN di Desa Sumbakeling, Silebu, dan Pancalang."
+>
+  <section class="page-intro">
+    <div class="page-intro__inner container">
+      <p class="eyebrow">Pemberdayaan ekonomi</p>
+      <h1>Direktori usaha lokal yang mudah dijelajahi.</h1>
+      <p class="page-intro__description">
+        Temukan cerita usaha, produk unggulan, dan bentuk pendampingan KKN. Data contoh yang belum
+        terverifikasi tetap ditandai [DUMMY], sementara kontak sensitif tetap dikosongkan.
+      </p>
+      <p class="page-intro__meta">
+        <strong>{data.umkm.length} UMKM publik</strong>
+        <span aria-hidden="true">·</span>
+        <span>Hanya data verified dan aktif</span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" data-filter-root>
+      {
+        data.umkm.length ? (
+          <>
+            <FilterBar groups={filterGroups} resultLabel="UMKM" />
+            <div class="overview-grid overview-grid--three">
+              {data.umkm.map((item) => (
+                <div
+                  data-filter-item
+                  data-filter-kelompok={item.groupId}
+                  data-filter-kategori={item.category}
+                >
+                  <UMKMCard
+                    item={item}
+                    group={data.groups.find(({ id }) => id === item.groupId)}
+                  />
+                </div>
+              ))}
+            </div>
+            <div hidden data-filter-empty class="filtered-empty">
+              <EmptyState
+                title="Belum ada UMKM untuk filter ini"
+                description="Coba pilih kelompok atau kategori usaha yang lain."
+              />
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            title="Data UMKM belum dapat ditampilkan"
+            description="Google Sheets sedang tidak dapat dibaca atau belum memiliki data verified dan aktif."
+          />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  [data-filter-item] {
+    min-width: 0;
+  }
+
+  .filtered-empty {
+    margin-top: var(--space-6);
+  }
+</style>

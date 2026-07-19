@@ -1,0 +1,272 @@
+---
+interface GalleryImage {
+  src: string;
+  alt: string;
+  caption?: string | null;
+  href?: string | null;
+  group?: string;
+  category?: string;
+}
+
+interface Props {
+  images: GalleryImage[];
+  title?: string;
+  showHeading?: boolean;
+  variant?: 'grid' | 'story';
+}
+
+const {
+  images,
+  title = 'Galeri dokumentasi',
+  showHeading = true,
+  variant = 'grid',
+} = Astro.props;
+const galleryId = `gallery-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<section class:list={['image-gallery', `image-gallery--${variant}`]} data-image-gallery={galleryId}>
+  {
+    showHeading && (
+      <div class="image-gallery__heading">
+        <p class="eyebrow">Dalam gambar</p>
+        <h2>{title}</h2>
+      </div>
+    )
+  }
+  <div class="image-gallery__grid" data-image-count={images.length}>
+    {
+      images.map((image, index) => (
+        <figure>
+          <button
+            type="button"
+            data-gallery-open
+            data-index={index}
+            aria-label={`Perbesar ${image.alt}`}
+          >
+            <img
+              src={image.src}
+              alt={image.alt}
+              width="1200"
+              height="900"
+              loading="lazy"
+              decoding="async"
+            />
+          </button>
+          <figcaption>
+            <span>{image.caption ?? image.alt}</span>
+            {image.href && <a href={image.href}>Lihat cerita terkait</a>}
+          </figcaption>
+        </figure>
+      ))
+    }
+  </div>
+
+  <dialog aria-label="Pratinjau foto" data-gallery-dialog>
+    <button class="image-gallery__close" type="button" data-gallery-close aria-label="Tutup pratinjau">
+      ×
+    </button>
+    <img src="/default.png" alt="" width="1200" height="900" data-gallery-image />
+    <p data-gallery-caption></p>
+  </dialog>
+</section>
+
+<script>
+  const initialiseGalleries = () => {
+    document.querySelectorAll<HTMLElement>('[data-image-gallery]').forEach((gallery) => {
+      if (gallery.dataset.galleryReady === 'true') return;
+      const dialog = gallery.querySelector<HTMLDialogElement>('[data-gallery-dialog]');
+      const dialogImage = gallery.querySelector<HTMLImageElement>('[data-gallery-image]');
+      const dialogCaption = gallery.querySelector<HTMLElement>('[data-gallery-caption]');
+      const closeButton = gallery.querySelector<HTMLButtonElement>('[data-gallery-close]');
+      if (!dialog || !dialogImage || !dialogCaption || !closeButton) return;
+
+      gallery.dataset.galleryReady = 'true';
+      gallery.querySelectorAll<HTMLButtonElement>('[data-gallery-open]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const image = button.querySelector<HTMLImageElement>('img');
+          const caption = button.closest('figure')?.querySelector('figcaption span')?.textContent;
+          if (!image) return;
+          dialogImage.src = image.currentSrc || image.src;
+          dialogImage.alt = image.alt;
+          dialogCaption.textContent = caption ?? '';
+          dialog.showModal();
+        });
+      });
+
+      closeButton.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+    });
+  };
+
+  initialiseGalleries();
+  document.addEventListener('astro:page-load', initialiseGalleries);
+</script>
+
+<style>
+  .image-gallery {
+    display: grid;
+    min-width: 0;
+    gap: var(--space-5);
+  }
+
+  .image-gallery__heading {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .image-gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+  }
+
+  figure {
+    display: grid;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  figure:nth-child(3n + 1) {
+    grid-row: span 2;
+  }
+
+  figure button {
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: var(--color-surface-soft);
+    cursor: zoom-in;
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 10rem;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform var(--transition-fast);
+  }
+
+  figure:nth-child(3n + 1) img {
+    aspect-ratio: 3 / 4;
+  }
+
+  .image-gallery__grid[data-image-count='2'] figure {
+    grid-row: auto;
+    grid-template-rows: auto 1fr;
+  }
+
+  .image-gallery__grid[data-image-count='2'] figure button {
+    aspect-ratio: 4 / 3;
+  }
+
+  .image-gallery__grid[data-image-count='2'] figure img {
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+
+  .image-gallery--story .image-gallery__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .image-gallery--story figure {
+    grid-row: auto;
+  }
+
+  .image-gallery--story figure button {
+    aspect-ratio: 16 / 9;
+  }
+
+  .image-gallery--story figure img {
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .image-gallery--story figcaption {
+    font-size: var(--font-size-sm);
+  }
+
+  figure button:hover img {
+    transform: scale(1.025);
+  }
+
+  figcaption {
+    display: grid;
+    padding: var(--space-3);
+    gap: var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  figcaption a {
+    width: fit-content;
+    color: #2f6f9d;
+    font-weight: 750;
+  }
+
+  dialog {
+    width: min(92vw, 58rem);
+    max-height: 92vh;
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    background: var(--color-surface);
+    box-shadow: 0 22px 70px rgb(30 42 48 / 30%);
+  }
+
+  dialog::backdrop {
+    background: rgb(30 42 48 / 72%);
+    backdrop-filter: blur(4px);
+  }
+
+  dialog img {
+    width: 100%;
+    max-height: 72vh;
+    border-radius: var(--radius-md);
+    object-fit: contain;
+    background: var(--color-surface-soft);
+  }
+
+  dialog p {
+    padding: var(--space-3) var(--space-1) 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .image-gallery__close {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin: 0 0 var(--space-3) auto;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    color: var(--color-dark);
+    background: var(--color-surface);
+    font-size: 1.6rem;
+    cursor: pointer;
+  }
+
+  @media (min-width: 46rem) {
+    .image-gallery__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .image-gallery__grid[data-image-count='2'] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

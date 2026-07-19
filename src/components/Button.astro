@@ -1,0 +1,111 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary';
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  ariaLabel?: string;
+  class?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  type = 'button',
+  disabled = false,
+  ariaLabel,
+  class: className,
+} = Astro.props;
+---
+
+{
+  href ? (
+    <a class:list={['button', `button--${variant}`, className]} href={href} aria-label={ariaLabel}>
+      <span><slot /></span>
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M4.2 10h11.6m-4.4-4.4 4.4 4.4-4.4 4.4" />
+      </svg>
+    </a>
+  ) : (
+    <button
+      class:list={['button', `button--${variant}`, className]}
+      {type}
+      {disabled}
+      aria-label={ariaLabel}
+    >
+      <span><slot /></span>
+    </button>
+  )
+}
+
+<style>
+  .button {
+    display: inline-flex;
+    min-height: 2.75rem;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+    padding: 0.68rem 1.15rem;
+    gap: var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-sm);
+    font-weight: 750;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast),
+      background var(--transition-fast),
+      box-shadow var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .button:hover {
+    transform: translateY(-1px);
+  }
+
+  .button:active {
+    transform: translateY(0);
+  }
+
+  .button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .button--primary {
+    color: var(--color-dark);
+    background: var(--color-primary);
+    box-shadow: 0 6px 18px rgb(79 143 190 / 18%);
+  }
+
+  .button--primary:hover {
+    background: #91c7ef;
+    box-shadow: 0 8px 22px rgb(79 143 190 / 24%);
+  }
+
+  .button--secondary {
+    border-color: var(--color-border);
+    color: var(--color-dark);
+    background: var(--color-surface);
+  }
+
+  .button--secondary:hover {
+    border-color: var(--color-primary-dark);
+    color: #2f6f9d;
+    background: var(--color-primary-soft);
+  }
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+</style>
