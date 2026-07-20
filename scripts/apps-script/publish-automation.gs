@@ -40,6 +40,20 @@ const PROP = {
   RETRY_COUNT: 'RETRY_COUNT',
 };
 
+/**
+ * Nilai yang diizinkan oleh data validation (dropdown) pada kolom
+ * status_publish_terakhir tab Pengaturan di spreadsheet produksi. Menulis
+ * nilai di luar daftar ini membuat Sheets melempar exception dan menggagalkan
+ * eksekusi script. Detail lengkap (sumber publish, kode HTTP) tetap disimpan
+ * bebas format di Script Properties lewat PROP.LAST_PUBLISH_STATUS.
+ */
+const SHEET_STATUS = {
+  NEVER: 'never',
+  PENDING: 'pending',
+  SUCCESS: 'success',
+  FAILED: 'failed',
+};
+
 const AUTO_HANDLERS = ['onSheetChange', 'dailyPublishCheck', 'retryPublish'];
 
 // ---------------------------------------------------------------- Menu
@@ -202,7 +216,7 @@ function publish_(source) {
   if (!hook) {
     const message = 'gagal (' + source + '): ' + CONFIG.HOOK_PROPERTY + ' belum diisi';
     props.setProperty(PROP.LAST_PUBLISH_STATUS, message);
-    writePublishStatus_(null, message + ' ' + toIsoWib_(now));
+    writePublishStatus_(null, SHEET_STATUS.FAILED);
     return false;
   }
 
@@ -224,11 +238,11 @@ function publish_(source) {
     props.setProperty(PROP.LAST_PUBLISH_AT, String(now.getTime()));
     props.setProperty(PROP.LAST_PUBLISH_STATUS, 'sukses (' + source + ') ' + detail);
     props.deleteProperty(PROP.RETRY_COUNT);
-    writePublishStatus_(toIsoWib_(now), 'sukses (' + source + ')');
+    writePublishStatus_(toIsoWib_(now), SHEET_STATUS.SUCCESS);
   } else {
     props.setProperty(PROP.LAST_PUBLISH_STATUS, 'gagal (' + source + ') ' + detail);
     // waktu_publish_terakhir tidak diubah saat gagal; catat kegagalan di kolom status.
-    writePublishStatus_(null, 'gagal (' + source + ') ' + detail + ' ' + toIsoWib_(now));
+    writePublishStatus_(null, SHEET_STATUS.FAILED);
   }
   return ok;
 }
@@ -238,6 +252,11 @@ function publish_(source) {
  * struktur kolom atau menambah baris. Kolom dicari berdasarkan nama header
  * dan baris data dicari (bukan di-hardcode) sehingga aman terhadap validasi
  * ketat build website: header tidak tersentuh dan baris data tetap satu.
+ *
+ * `statusText` harus salah satu nilai SHEET_STATUS karena kolom
+ * status_publish_terakhir pada spreadsheet produksi memakai data validation
+ * dropdown (never/pending/success/failed) — nilai di luar itu ditolak Sheets
+ * dengan exception.
  */
 function writePublishStatus_(isoTimestampOrNull, statusText) {
   const ctx = getSettingsContext_();

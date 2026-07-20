@@ -14,8 +14,12 @@ perubahan):
 - Jalur terjadwal dikendalikan kolom `auto_rebuild` pada tab `Pengaturan`
   (TRUE = aktif) — bisa dimatikan tanpa menghapus trigger.
 - Waktu dan status publish terakhir dicatat ke kolom `waktu_publish_terakhir`
-  dan `status_publish_terakhir` tab `Pengaturan` (format ISO 8601 `+07:00`,
-  ditulis sebagai teks supaya lolos validator build).
+  (ISO 8601 `+07:00`, ditulis sebagai teks) dan `status_publish_terakhir`
+  (salah satu dari `never`/`pending`/`success`/`failed`, sesuai dropdown
+  data validation pada spreadsheet produksi) tab `Pengaturan`. Detail lengkap
+  (sumber publish, kode HTTP, pesan error) tetap tersimpan bebas format di
+  Script Properties dan bisa dilihat lewat menu **Lihat status publish
+  terakhir**.
 - URL Deploy Hook disimpan di **Script Properties** dengan key
   `CLOUDFLARE_DEPLOY_HOOK_URL` — tidak pernah di sheet atau repository.
 
@@ -94,9 +98,17 @@ pemasangan ini **setelah** deploy pertama Fase 6.
   kolom dicari berdasarkan nama header, jadi script tidak pernah menambah
   baris/kolom yang bisa menggagalkan validator build.
 - `waktu_publish_terakhir` hanya diperbarui saat Deploy Hook menerima
-  permintaan (HTTP 2xx). Kegagalan dicatat di `status_publish_terakhir`, dan
-  jalur terjadwal mencoba ulang maksimal 2 kali dengan jeda 15 menit sebelum
-  menyerah ke jadwal malam berikutnya.
+  permintaan (HTTP 2xx). Kegagalan dicatat sebagai `failed` di
+  `status_publish_terakhir`, dan jalur terjadwal mencoba ulang maksimal 2 kali
+  dengan jeda 15 menit sebelum menyerah ke jadwal malam berikutnya.
+- Kolom `status_publish_terakhir` pada spreadsheet produksi memakai dropdown
+  data validation yang hanya menerima `never`/`pending`/`success`/`failed`.
+  Script hanya pernah menulis `success` atau `failed` ke kolom itu (`never`
+  adalah nilai awal sebelum publish pertama; `pending` tidak dipakai karena
+  panggilan ke Deploy Hook bersifat sinkron). Bila nilai lain pernah ditulis
+  manual ke sel itu, publish berikutnya akan gagal dengan Sheets exception
+  "violates the data validation rules" — perbaiki isi selnya menjadi salah
+  satu dari empat nilai tersebut.
 - Scanner folder Drive dan pencocokan nama file foto (bagian lain Fase 5B)
   **belum** termasuk script ini.
 - Mengubah jam jadwal atau perilaku retry: edit konstanta `CONFIG` di bagian
