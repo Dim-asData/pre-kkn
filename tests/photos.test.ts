@@ -16,6 +16,8 @@ describe('referensi foto Google Drive', () => {
     expect(photoUrl('https://example.com/foto-eksternal.webp')).toBe(
       'https://example.com/foto-eksternal.webp',
     );
+    expect(photoUrl('https://placehold.co/800x800.webp?text=Produk')).toBe('/default.png');
+    expect(photoUrl('https://www.placehold.co/1200x800.webp')).toBe('/default.png');
     expect(photoUrl(null)).toBe('/default.png');
     expect(hasSyncedDrivePhoto('drive://1Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')).toBe(false);
   });

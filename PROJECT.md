@@ -51,7 +51,7 @@ Status fase:
 | Fase 3 - Konten awal | Selesai | Tujuh rangkaian proposal disiapkan sebagai seed MDX untuk migrasi; seluruhnya kini berada di Sheets produksi |
 | Fase 4 - Foto dan media | Selesai | Referensi Drive disinkronkan saat build, diproses dengan Sharp menjadi WebP lokal, memakai manifest, cache, fallback, dan nama berkas ber-hash |
 | Fase 5A - CMS produksi tanpa MDX | Selesai | Spreadsheet produksi 10 tab, migrasi data, refactor jalur publik, penghapusan MDX, test, build, dan QA browser telah selesai |
-| Fase 5B - Publish automation | Ditunda | Trigger pukul 12, pencocokan nama file Drive, Apps Script, dan Cloudflare Deploy Hook belum boleh diimplementasikan dalam task Fase 5A |
+| Fase 5B - Publish automation | Sebagian | Kode Apps Script, manifest, dan panduan pemasangan tersedia di `scripts/apps-script/` (19 Juli 2026); pemasangan Deploy Hook, otorisasi, dan trigger dilakukan admin setelah deploy pertama Cloudflare Pages. Scanner folder/nama file Drive belum dikerjakan |
 | Fase 6 - QA dan deployment | Belum dimulai | QA dasar per fase sudah dilakukan, tetapi audit final dan deployment belum dilakukan |
 
 Fondasi yang sudah tersedia dan tidak boleh dibangun ulang:
@@ -158,6 +158,10 @@ Google Sheets native yang digunakan:
 ```txt
 PUBLIC_SHEET_ID=1TZJrcIpQ2YGTSndRJv8_Onee-vkb71TrcyU3ObYj4uo
 ```
+
+Catatan (19 Juli 2026): spreadsheet prototipe ini berstatus arsip/fixture dengan skema
+header lama. Jangan memakai ID ini untuk build atau environment variable Cloudflare
+Pages — gunakan ID spreadsheet produksi Fase 5A di `.env` lokal (Bagian 2.3.1 dan 15).
 
 Aturan:
 
@@ -1331,15 +1335,16 @@ PUBLIC_SITE_TAGLINE=Cerita, karya, dan pengabdian dari tiga desa.
 PUBLIC_SITE_DESCRIPTION=Dokumentasi kegiatan dan promosi UMKM dalam implementasi program CSR KKN.
 ```
 
-Nilai aktif prototipe untuk `.env` lokal:
+PERINGATAN (19 Juli 2026): ID spreadsheet prototipe pada Bagian 2.3
+(`1TZJrcIpQ2YGTSndRJv8_Onee-vkb71TrcyU3ObYj4uo`) sudah usang untuk build — header tab-nya
+memakai skema lama sehingga validator akan menggagalkan build. Build lokal dan Cloudflare
+Pages harus memakai ID spreadsheet produksi Fase 5A yang tersimpan di `.env` lokal
+(lihat Bagian 2.3.1; ID produksi sengaja tidak dicatat di repository).
 
-```env
-PUBLIC_SHEET_ID=1TZJrcIpQ2YGTSndRJv8_Onee-vkb71TrcyU3ObYj4uo
-```
+Jangan mengganti placeholder `PUBLIC_SHEET_ID` pada `.env.example` dengan ID mana pun.
 
-Jangan mengganti placeholder `PUBLIC_SHEET_ID` pada `.env.example` dengan ID tersebut.
-
-Cloudflare Pages wajib memiliki:
+Cloudflare Pages wajib memiliki environment variable berikut pada Production dan Preview,
+diisi dengan ID spreadsheet produksi dari `.env` lokal:
 
 ```txt
 PUBLIC_SHEET_ID
@@ -1393,7 +1398,10 @@ Pembaruan operasional dilakukan rutin pada malam hari setelah kelompok menyelesa
 
 ## 17. Otomatisasi Publish
 
-Bagian ini adalah target Fase 5B dan belum boleh diimplementasikan pada task migrasi CMS Fase 5A.
+Bagian ini adalah target Fase 5B. Kode Apps Script, manifest, dan panduan pemasangan
+tersedia di `scripts/apps-script/`; pemasangan pada akun Google/Cloudflare dilakukan admin
+setelah deploy pertama Cloudflare Pages (lihat `scripts/apps-script/README.md`). Scanner
+folder Drive dan pencocokan nama file foto belum diimplementasikan.
 
 Jalur kode:
 
@@ -1405,30 +1413,31 @@ Cloudflare Pages build
 Deploy
 ```
 
-Jalur perubahan data:
+Jalur perubahan data (revisi 19 Juli 2026: publish otomatis per perubahan dihapus;
+publish hanya lewat rebuild manual atau jadwal malam):
 
 ```txt
 Admin mengubah Google Sheets
 ↓
 Apps Script menandai perubahan
 ↓
-Debounce/cooldown 1-5 menit
+Trigger harian sekitar pukul 00.00 WIB memeriksa penanda perubahan
 ↓
-POST Cloudflare Deploy Hook
+POST Cloudflare Deploy Hook bila ada perubahan yang belum terpublikasi
 ↓
 Cloudflare menjalankan build
 ```
 
 Apps Script menyediakan:
 
-- trigger waktu harian sekitar pukul 12.00 zona `Asia/Jakarta`,
-- pembacaan flag `Pengaturan.AUTO_REBUILD` agar trigger otomatis dapat dinonaktifkan tanpa menghapus trigger,
-- cooldown agar build tidak terpanggil berulang,
+- trigger waktu harian sekitar pukul 00.00 zona `Asia/Jakarta` yang hanya mem-publish bila ada perubahan belum terpublikasi,
+- pembacaan flag `Pengaturan.AUTO_REBUILD` agar jadwal malam dapat dinonaktifkan tanpa menghapus trigger,
+- percobaan ulang terbatas bila POST Deploy Hook gagal,
 - menu `KKN Web -> Rebuild sekarang` yang tetap berfungsi ketika `AUTO_REBUILD` nonaktif,
 - pencatatan waktu dan status publish terakhir,
 - penyimpanan Deploy Hook di Script Properties.
 
-Automation Drive pada Fase 5B akan memeriksa perubahan folder dan pola nama file secara berkala, lalu memicu build hanya bila manifest konten berubah. Format foto output menggunakan `[nomor_output]-[slug-nama-output].[ext]`. Apps Script time-driven tidak dianggap jaminan eksekusi tepat pada detik 12.00; kebutuhan presisi tinggi harus memakai scheduler Cloudflare pada fase terpisah.
+Automation Drive pada Fase 5B akan memeriksa perubahan folder dan pola nama file secara berkala, lalu memicu build hanya bila manifest konten berubah. Format foto output menggunakan `[nomor_output]-[slug-nama-output].[ext]`. Apps Script time-driven tidak dianggap jaminan eksekusi tepat pada detik 00.00; trigger berjalan dalam rentang sekitar pukul 00.00-01.00 WIB, dan kebutuhan presisi tinggi harus memakai scheduler Cloudflare pada fase terpisah.
 
 ---
 
@@ -1615,7 +1624,7 @@ Hasil implementasi Fase 5A:
 
 1. Apps Script.
 2. Flag `AUTO_REBUILD`.
-3. Trigger harian sekitar pukul 12.00 WIB.
+3. Trigger harian sekitar pukul 00.00 WIB (rebuild malam; tanpa publish otomatis per perubahan).
 4. Cloudflare Deploy Hook.
 5. Cooldown, deteksi perubahan, manual rebuild, dan log status.
 6. Scanner folder Drive serta validasi format nama file.
@@ -1809,7 +1818,7 @@ Proyek dianggap selesai jika:
 [x] Migrasikan konteks dan relasi foto kegiatan yang sudah ada ke Foto_Kegiatan tanpa membuat daftar galeri kedua
 [x] Pensiunkan Content Collections/MDX dan mdx_path dari jalur publik setelah parity terverifikasi
 [x] Verifikasi empty, partial, ongoing, dan completed state dari fixture Sheets
-[ ] Siapkan Apps Script dan Deploy Hook
+[ ] Pasang Apps Script (kode tersedia di scripts/apps-script/) dan buat Deploy Hook setelah deploy pertama
 [ ] Jalankan QA final, broken-link test, audit aksesibilitas, dan audit performa
 [ ] Deploy ke Cloudflare Pages
 ```

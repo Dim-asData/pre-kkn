@@ -7,6 +7,9 @@ dist/
 public/_photos/
 .cache/photos/
 
+# artefak kerja internal (workbook dummy, preview)
+outputs/
+
 # dependencies
 node_modules/
 

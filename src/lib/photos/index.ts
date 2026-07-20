@@ -5,6 +5,12 @@ export { extractDriveId, toDriveReference };
 
 export const FALLBACK_PHOTO_URL = '/default.png';
 
+/**
+ * Host placeholder pada data dummy prototipe. Pengunjung tidak boleh
+ * memuat layanan eksternal ini; render memakai fallback lokal.
+ */
+const PLACEHOLDER_HOST_PATTERN = /^https?:\/\/(?:www\.)?placehold\.co\//i;
+
 /** Benar hanya bila referensi Drive sudah tersedia sebagai aset hasil sinkronisasi lokal. */
 export const hasSyncedDrivePhoto = (reference: string | null | undefined): boolean => {
   const driveId = extractDriveId(reference?.trim());
@@ -13,7 +19,8 @@ export const hasSyncedDrivePhoto = (reference: string | null | undefined): boole
 
 /**
  * Menghasilkan URL publik lokal. URL non-Drive tetap didukung untuk aset lokal
- * dan URL eksternal yang memang disengaja.
+ * dan URL eksternal yang memang disengaja, kecuali placeholder dummy
+ * (placehold.co) yang selalu jatuh ke fallback lokal.
  */
 export const photoUrl = (
   reference: string | null | undefined,
@@ -23,5 +30,7 @@ export const photoUrl = (
   if (!value) return fallback;
 
   const driveId = extractDriveId(value);
-  return driveId ? (photoManifest[driveId] ?? fallback) : value;
+  if (driveId) return photoManifest[driveId] ?? fallback;
+  if (PLACEHOLDER_HOST_PATTERN.test(value)) return fallback;
+  return value;
 };

@@ -1,0 +1,6 @@
+# Fase prototipe: konten masih memuat data contoh bertanda [DUMMY].
+# Seluruh halaman sengaja tidak diindeks sampai data produksi terverifikasi.
+# Saat go-live: hapus baris Disallow, set `site` di astro.config.mjs, dan
+# tambahkan baris "Sitemap: https://<domain>/sitemap-index.xml".
+User-agent: *
+Disallow: /
