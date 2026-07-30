@@ -97,6 +97,20 @@ const headings = [
   { depth: 2, slug: 'cerita-program', text: 'Cerita program' },
   { depth: 2, slug: 'ukuran-keberhasilan', text: 'Ukuran keberhasilan' },
 ];
+const summaryItems = [
+  {
+    label: 'Penerima manfaat',
+    value: `${activity.beneficiaries.length} kelompok sasaran`,
+  },
+  {
+    label: 'Hasil program',
+    value: `${activity.outputs.length} output dicatat`,
+  },
+  {
+    label: 'Indikator',
+    value: `${activity.indicators.length} ukuran keberhasilan`,
+  },
+];
 ---
 
 <BaseLayout title={activity.title} description={activity.shortDescription}>
@@ -113,7 +127,7 @@ const headings = [
     imageAlt={activity.heroPhoto?.alt ?? null}
   />
 
-  <section class="section">
+  <section class="section" id="dokumentasi">
     <div class="container detail-shell detail-shell--sidebar">
       <div class="detail-main">
         {
@@ -124,6 +138,23 @@ const headings = [
             </InfoBox>
           )
         }
+
+        <section class="activity-summary" aria-labelledby="ringkasan-kegiatan">
+          <div class="activity-summary__heading">
+            <p class="eyebrow">Ringkasan kegiatan</p>
+            <h2 id="ringkasan-kegiatan">Informasi penting sebelum membaca cerita lengkap.</h2>
+          </div>
+          <dl>
+            {
+              summaryItems.map(({ label, value }) => (
+                <div>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))
+            }
+          </dl>
+        </section>
 
         <TableOfContents headings={headings} placement="mobile" />
 
@@ -218,6 +249,58 @@ const headings = [
 </BaseLayout>
 
 <style>
+  .activity-summary {
+    display: grid;
+    padding: clamp(var(--space-5), 6vw, var(--space-7));
+    gap: var(--space-5);
+    border: 1px solid rgb(79 143 190 / 22%);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at 92% 15%, rgb(255 255 255 / 72%), transparent 11rem),
+      var(--color-primary-soft);
+  }
+
+  .activity-summary__heading {
+    display: grid;
+    max-width: 38rem;
+    gap: var(--space-2);
+  }
+
+  .activity-summary__heading h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .activity-summary dl {
+    display: grid;
+    margin: 0;
+    gap: var(--space-3);
+  }
+
+  .activity-summary dl div {
+    display: grid;
+    padding: var(--space-4);
+    gap: var(--space-1);
+    border: 1px solid rgb(79 143 190 / 15%);
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 64%);
+  }
+
+  .activity-summary dt {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .activity-summary dd {
+    margin: 0;
+    color: var(--color-dark);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+  }
+
   .article-section {
     scroll-margin-top: var(--space-7);
   }
@@ -249,5 +332,11 @@ const headings = [
 
   .article-story__description {
     max-width: none;
+  }
+
+  @media (min-width: 42rem) {
+    .activity-summary dl {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 </style>

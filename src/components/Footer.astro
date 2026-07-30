@@ -5,16 +5,28 @@ const navigation = [
   { label: 'UMKM binaan', href: '/umkm' },
   { label: 'Galeri', href: '/galeri' },
 ];
+
+const villages = [
+  { group: 'T1', name: 'Sumbakeling', href: '/kegiatan?kelompok=t1', tone: 't1' },
+  { group: 'T2', name: 'Silebu', href: '/kegiatan?kelompok=t2', tone: 't2' },
+  { group: 'T3', name: 'Pancalang', href: '/kegiatan?kelompok=t3', tone: 't3' },
+];
 ---
 
 <footer class="site-footer">
+
   <div class="footer-inner container">
     <div class="footer-intro">
-      <p class="footer-kicker">Jejak KKN Pancalang</p>
-      <h2>Cerita pengabdian dari tiga desa.</h2>
+      <a class="footer-brand" href="/" aria-label="Jejak KKN Pancalang, beranda">
+        <span aria-hidden="true">
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
+        <strong>Jejak KKN Pancalang</strong>
+      </a>
       <p>
-        Arsip publik kegiatan KKN Budi Luhur University di Desa Sumbakeling, Silebu, dan
-        Pancalang.
+        Arsip publik kegiatan mahasiswa dan usaha lokal di desa
       </p>
     </div>
 
@@ -25,27 +37,94 @@ const navigation = [
       </ul>
     </nav>
 
-    <div>
-      <p class="footer-label">Kelompok</p>
-      <ul class="group-list">
-        <li><span class="dot dot--t1"></span>T1 · Sumbakeling</li>
-        <li><span class="dot dot--t2"></span>T2 · Silebu</li>
-        <li><span class="dot dot--t3"></span>T3 · Pancalang</li>
+    <nav aria-label="Kegiatan berdasarkan desa">
+      <p class="footer-label">Tiga desa</p>
+      <ul class="village-list">
+        {
+          villages.map(({ group, name, href, tone }) => (
+            <li>
+              <a href={href}>
+                <span class:list={['dot', `dot--${tone}`]}></span>
+                <span><small>{group}</small>{name}</span>
+              </a>
+            </li>
+          ))
+        }
       </ul>
-    </div>
+    </nav>
   </div>
 
   <div class="footer-bottom container">
     <p>© {year} KKN Budi Luhur University, Kecamatan Pancalang.</p>
-    <p>Data realisasi ditampilkan setelah terverifikasi.</p>
+    <p>Diperbarui dari data kegiatan yang telah diperiksa.</p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    padding-top: var(--space-8);
+    padding-top: var(--space-7);
     color: rgb(255 255 255 / 72%);
-    background: var(--color-dark);
+    background:
+      radial-gradient(circle at 8% 92%, rgb(124 185 232 / 13%), transparent 24rem),
+      radial-gradient(circle at 92% 8%, rgb(85 107 47 / 20%), transparent 22rem),
+      var(--color-dark);
+  }
+
+  .footer-cta {
+    display: grid;
+    margin-bottom: var(--space-8);
+    padding: clamp(var(--space-5), 6vw, var(--space-7));
+    align-items: center;
+    gap: var(--space-5);
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 6%);
+  }
+
+  .footer-cta > div:first-child {
+    display: grid;
+    max-width: 44rem;
+    gap: var(--space-2);
+  }
+
+  .footer-kicker,
+  .footer-label {
+    color: #a8d7f5;
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .footer-cta h2 {
+    color: var(--color-surface);
+    font-size: var(--font-size-2xl);
+  }
+
+  .footer-cta__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .footer-cta__links a {
+    display: inline-flex;
+    min-height: 2.875rem;
+    padding-inline: var(--space-4);
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: var(--radius-pill);
+    color: var(--color-surface);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .footer-cta__links .footer-cta__primary {
+    border-color: var(--color-primary);
+    color: var(--color-dark);
+    background: var(--color-primary);
   }
 
   .footer-inner {
@@ -56,26 +135,65 @@ const navigation = [
 
   .footer-intro {
     display: grid;
-    max-width: 32rem;
+    max-width: 35rem;
+    align-content: start;
+    gap: var(--space-4);
+  }
+
+  .footer-brand {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
     gap: var(--space-3);
-  }
-
-  .footer-kicker,
-  .footer-label {
-    color: var(--color-primary);
-    font-size: var(--font-size-xs);
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  h2 {
     color: var(--color-surface);
-    font-size: var(--font-size-2xl);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    text-decoration: none;
   }
 
-  nav,
-  .footer-inner > div:not(.footer-intro) {
+  .footer-brand > span {
+    position: relative;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 48% 52% 45% 55% / 56% 46% 54% 44%;
+    background: rgb(124 185 232 / 18%);
+    transform: rotate(-5deg);
+  }
+
+  .footer-brand i {
+    position: absolute;
+    width: 0.58rem;
+    height: 0.58rem;
+    border: 2px solid var(--color-dark);
+    border-radius: 50%;
+  }
+
+  .footer-brand i:nth-child(1) {
+    top: 0.62rem;
+    left: 0.62rem;
+    background: var(--color-t1);
+  }
+
+  .footer-brand i:nth-child(2) {
+    top: 0.62rem;
+    right: 0.54rem;
+    background: #bd657b;
+  }
+
+  .footer-brand i:nth-child(3) {
+    bottom: 0.48rem;
+    left: 0.96rem;
+    background: #9aae77;
+  }
+
+  .footer-trust {
+    padding-left: var(--space-3);
+    border-left: 2px solid rgb(124 185 232 / 55%);
+    color: rgb(255 255 255 / 58%);
+    font-size: var(--font-size-sm);
+  }
+
+  nav {
     display: grid;
     align-content: start;
     gap: var(--space-4);
@@ -89,7 +207,7 @@ const navigation = [
     list-style: none;
   }
 
-  a {
+  nav a {
     display: inline-flex;
     min-height: 2.75rem;
     align-items: center;
@@ -98,22 +216,30 @@ const navigation = [
     text-decoration: none;
   }
 
-  a:hover {
+  nav a:hover {
     color: var(--color-surface);
     text-decoration: underline;
   }
 
-  .group-list li {
-    display: flex;
-    min-height: 2.25rem;
-    align-items: center;
+  .village-list a {
     gap: var(--space-3);
-    font-size: var(--font-size-sm);
+  }
+
+  .village-list a > span:last-child {
+    display: grid;
+    line-height: 1.2;
+  }
+
+  .village-list small {
+    color: rgb(255 255 255 / 48%);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
   }
 
   .dot {
-    width: 0.625rem;
-    height: 0.625rem;
+    width: 0.65rem;
+    height: 0.65rem;
     flex: 0 0 auto;
     border-radius: 50%;
   }
@@ -123,7 +249,7 @@ const navigation = [
   }
 
   .dot--t2 {
-    background: #b75970;
+    background: #bd657b;
   }
 
   .dot--t3 {
@@ -135,10 +261,19 @@ const navigation = [
     padding-block: var(--space-5);
     gap: var(--space-2);
     border-top: 1px solid rgb(255 255 255 / 12%);
+    color: rgb(255 255 255 / 52%);
     font-size: var(--font-size-xs);
   }
 
   @media (min-width: 48rem) {
+    .footer-cta {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .footer-cta__links {
+      justify-content: flex-end;
+    }
+
     .footer-inner {
       grid-template-columns: minmax(0, 1.8fr) repeat(2, minmax(10rem, 0.6fr));
     }

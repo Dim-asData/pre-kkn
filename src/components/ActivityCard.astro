@@ -34,20 +34,20 @@ const usesPlaceholder = !heroReference;
       decoding="async"
     />
     {usesPlaceholder && <span>[DUMMY] Placeholder gambar</span>}
+    <span class="activity-card__category">{CATEGORY_LABELS[activity.category]}</span>
   </a>
   <div class="activity-card__body">
     <div class="activity-card__badges">
-      <GroupBadge kelompok={activity.groupId} />
+      <GroupBadge kelompok={activity.groupId} showName />
       <StatusBadge status={activity.status} />
     </div>
     <p class="activity-card__meta">
-      <span>{CATEGORY_LABELS[activity.category]}</span>
-      <span aria-hidden="true">·</span>
       <span>{date ?? 'Tanggal belum ditentukan'}</span>
+      <span aria-hidden="true">·</span>
+      <span>{activity.location}</span>
     </p>
     <h3><a href={href}>{activity.title}</a></h3>
     <p>{activity.shortDescription}</p>
-    <p class="activity-card__location">{activity.location}</p>
     {outputSummary && <p class="activity-card__output">Output: {outputSummary}</p>}
     <TextLink href={href}>Baca detail kegiatan</TextLink>
   </div>
@@ -58,10 +58,10 @@ const usesPlaceholder = !heroReference;
     display: grid;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 8px 28px rgb(30 42 48 / 7%);
     transition: box-shadow var(--transition-fast), transform var(--transition-fast);
   }
 
@@ -76,7 +76,7 @@ const usesPlaceholder = !heroReference;
     background: var(--color-surface-soft);
   }
 
-  .activity-card__image-link > span {
+  .activity-card__image-link > span:not(.activity-card__category) {
     position: absolute;
     right: var(--space-3);
     bottom: var(--space-3);
@@ -87,6 +87,20 @@ const usesPlaceholder = !heroReference;
     font-size: 0.66rem;
     font-weight: 800;
     letter-spacing: 0.04em;
+  }
+
+  .activity-card__category {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    padding: 0.34rem 0.65rem;
+    border: 1px solid rgb(255 255 255 / 55%);
+    border-radius: var(--radius-pill);
+    color: var(--color-surface);
+    background: rgb(30 42 48 / 74%);
+    font-size: 0.66rem;
+    font-weight: 800;
+    backdrop-filter: blur(8px);
   }
 
   img {
@@ -116,7 +130,6 @@ const usesPlaceholder = !heroReference;
   }
 
   .activity-card__meta,
-  .activity-card__location,
   .activity-card__output {
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
@@ -124,7 +137,8 @@ const usesPlaceholder = !heroReference;
   }
 
   h3 {
-    font-size: var(--font-size-xl);
+    font-size: clamp(1.25rem, 2.6vw, 1.55rem);
+    line-height: 1.25;
   }
 
   h3 a {
@@ -132,10 +146,10 @@ const usesPlaceholder = !heroReference;
   }
 
   h3 a:hover {
-    color: #2f6f9d;
+    color: var(--color-link);
   }
 
-  .activity-card__body > p:not(.activity-card__meta, .activity-card__location, .activity-card__output) {
+  .activity-card__body > p:not(.activity-card__meta, .activity-card__output) {
     color: var(--color-text-muted);
   }
 

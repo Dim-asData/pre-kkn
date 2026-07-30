@@ -1,774 +1,566 @@
-# DESIGN-SPEC.md
+# DESIGN-SPEC — Audit UX dan Rekomendasi Redesign
 
-## 1. Tujuan Dokumen
+## 1. Status dokumen
 
-Dokumen ini menjadi acuan untuk membuat **preview desain statis** website dokumentasi KKN sebelum desain diterapkan ke proyek Astro utama.
+Dokumen ini menggantikan spesifikasi preview lama dan menjadi acuan redesign berbasis audit untuk website **Jejak KKN Pancalang**.
 
-Preview hanya bertujuan untuk mengevaluasi:
+Status saat ini:
 
-- arah visual,
-- warna,
-- tata letak,
-- typography,
-- bentuk komponen,
-- hierarki informasi,
-- responsivitas dasar.
+- audit UX dan aksesibilitas awal: selesai;
+- rekomendasi struktur dan alur: disetujui;
+- arah visual high-fidelity: diterapkan langsung pada project Astro;
+- implementasi Astro: selesai;
+- QA responsive desktop/mobile, pemeriksaan tipe, test, dan build produksi: lulus.
 
-Preview belum perlu terhubung ke Google Sheets, MDX, Google Drive, Cloudflare Pages, atau pipeline gambar.
+Redesign harus tetap mempertahankan karakter yang sudah kuat: humanis, hangat, bernuansa desa, modern, mudah dibaca, dan menjadikan foto kegiatan sebagai bukti utama.
 
 ---
 
-## 2. Output yang Harus Dibuat
+## 2. Tujuan produk
 
-Codex cukup membuat tiga file dasar:
+Website memiliki dua fungsi utama yang harus terlihat jelas sejak layar pertama:
 
-```txt
-design-preview/
-├── index.html
-├── style.css
-└── script.js
+1. Mendokumentasikan rencana, proses, hasil, dan bukti kegiatan mahasiswa KKN.
+2. Membantu warga menemukan dan menghubungi UMKM lokal yang datanya sudah aman untuk dipublikasikan.
+
+Website bukan marketplace penuh dan bukan dashboard internal. Pengalaman yang diutamakan adalah menemukan informasi, memahami konteks, melihat bukti, lalu melakukan tindakan sederhana seperti membaca detail, membagikan kegiatan, membuka lokasi, atau menghubungi UMKM.
+
+---
+
+## 3. Target pengguna dan kebutuhan utama
+
+| Pengguna | Kebutuhan utama | Tindakan yang harus mudah |
+| --- | --- | --- |
+| Warga desa | Mengetahui kegiatan di desanya dan manfaatnya | Pilih desa, lihat kegiatan terbaru, buka bukti, bagikan informasi |
+| Calon pembeli UMKM | Menemukan produk lokal yang relevan dan dapat dipercaya | Cari produk, bandingkan informasi dasar, hubungi penjual, buka lokasi |
+| Mahasiswa KKN | Mendokumentasikan program dengan struktur yang konsisten | Temukan kegiatan per kelompok, periksa status, buka detail, bagikan dokumentasi |
+| Perangkat desa | Memahami cakupan, status, penerima manfaat, dan bukti program | Lihat ringkasan per desa, buka hasil program, periksa data yang sudah diverifikasi |
+
+Prinsip penting: pengunjung umum tidak perlu memahami struktur internal T1, T2, dan T3 sebelum menemukan informasi yang mereka butuhkan. Nama desa dan jenis kebutuhan harus lebih menonjol; kode kelompok tetap dipakai sebagai metadata dan filter.
+
+---
+
+## 4. Ruang lingkup audit
+
+Audit dilakukan pada build situs saat ini dengan dua ukuran layar:
+
+- desktop: `1440 × 900`;
+- mobile: `390 × 844`.
+
+Halaman dan keadaan yang diperiksa:
+
+1. beranda desktop;
+2. susunan section beranda;
+3. detail kegiatan desktop;
+4. isi panjang detail kegiatan;
+5. detail UMKM desktop;
+6. beranda mobile;
+7. menu mobile terbuka;
+8. detail kegiatan mobile;
+9. detail UMKM mobile;
+10. daftar isi artikel pada mobile.
+
+Bukti screenshot disimpan di [`outputs/ux-audit-2026-07-23`](outputs/ux-audit-2026-07-23/).
+
+Audit aksesibilitas ini belum merupakan sertifikasi WCAG. Screenshot dan pemeriksaan struktur dapat menemukan risiko yang terlihat, tetapi pengujian pembaca layar, zoom 200–400%, seluruh urutan keyboard, perangkat sentuh nyata, dan kombinasi browser masih harus dilakukan saat implementasi.
+
+---
+
+## 5. Ringkasan hasil audit
+
+### 5.1 Penilaian umum
+
+Fondasi visual dan struktur semantik situs sudah baik. Identitas desa terasa hangat, judul mudah dikenali, navigasi global sederhana, dan detail kegiatan memiliki bukti yang lebih lengkap daripada situs dokumentasi KKN pada umumnya.
+
+Masalah utamanya bukan kekurangan konten, melainkan **terlalu banyak jalur dan detail yang memiliki bobot visual serupa**. Beranda memprioritaskan cara tim KKN mengelompokkan program, bukan tugas utama pengunjung. Detail kegiatan kaya informasi tetapi membutuhkan ringkasan dan pengelompokan yang lebih tajam. Detail UMKM belum bekerja optimal sebagai halaman promosi karena tindakan “hubungi/pesan” tidak menjadi pusat pengalaman.
+
+### 5.2 Kekuatan yang dipertahankan
+
+1. Navigasi utama hanya memiliki empat label yang mudah dipahami: Beranda, Kegiatan, UMKM, dan Galeri.
+2. Hero menyampaikan identitas wilayah, tujuan dokumentasi, dan nuansa humanis dengan cepat.
+3. Foto asli menjadi pusat cerita, bukan dekorasi.
+4. Status program dibedakan dari realisasi; ini penting untuk kepercayaan perangkat desa dan warga.
+5. Detail kegiatan memakai heading, region, daftar isi, breadcrumb, dan konten terkait yang terstruktur.
+6. Menu mobile memiliki label buka/tutup, `aria-expanded`, dan indikator fokus yang terlihat.
+7. Skip link, urutan heading, teks alternatif gambar, dan ukuran teks body memberi fondasi aksesibilitas yang baik.
+
+---
+
+## 6. Temuan audit berdasarkan area evaluasi
+
+### 6.1 Struktur navigasi
+
+**Temuan**
+
+- Empat menu utama sudah jelas dan tidak perlu ditambah.
+- CTA global “Jelajahi kegiatan” menduplikasi menu Kegiatan. Sementara itu, jalur calon pembeli menuju UMKM tidak mendapat prioritas setara.
+- Struktur T1/T2/T3 muncul sangat awal, padahal warga lebih mudah mengenali desa daripada kode kelompok.
+- Detail panjang tidak menyediakan tindakan yang selalu mudah ditemukan untuk kembali, membagikan, atau berpindah ke tujuan berikutnya.
+
+**Rekomendasi**
+
+- Pertahankan menu utama `Beranda`, `Kegiatan`, `UMKM`, dan `Galeri`.
+- Ubah CTA global menjadi `Temukan produk UMKM` agar navigasi melayani dua fungsi situs, bukan menggandakan Kegiatan.
+- Gunakan nama desa sebagai label utama; T1/T2/T3 menjadi badge sekunder.
+- Pada mobile, ganti breadcrumb panjang menjadi tautan `← Kembali ke Kegiatan` atau `← Kembali ke UMKM`, lalu tampilkan judul halaman tanpa separator yang terpisah.
+
+**Alasan**
+
+Pengguna seharusnya dapat memilih antara jalur dokumentasi dan jalur promosi UMKM sejak awal. Nama desa juga memiliki beban kognitif lebih rendah bagi warga dan perangkat desa.
+
+### 6.2 Hierarki informasi
+
+**Temuan**
+
+- Hierarki hero kuat, tetapi beranda setelah hero terlalu berorientasi pada organisasi internal: ringkasan kelompok lalu peta program muncul sebelum konten terbaru dan UMKM.
+- Kegiatan yang sama dapat muncul di peta program, kegiatan terbaru, kegiatan edukasi, dan galeri. Pengulangan membuat beranda sangat panjang dan mengurangi kejelasan prioritas.
+- Banyak section menggunakan pola heading, card, dan CTA yang sama sehingga seluruh bagian terasa memiliki urgensi setara.
+- Detail kegiatan memuat penerima manfaat, output, bantuan, cerita, dan indikator secara lengkap, tetapi tidak memberi ringkasan cepat sebelum pengunjung memasuki artikel panjang.
+- Detail UMKM menempatkan informasi pendampingan KKN dan keadaan data kosong hampir setara dengan produk dan cara membeli.
+
+**Rekomendasi**
+
+- Setelah hero, tampilkan konten yang menjawab tugas pengunjung: kegiatan terbaru dan UMKM pilihan.
+- Gabungkan ringkasan kelompok dan peta program menjadi satu `Ringkasan per desa`.
+- Jadikan pendidikan sebagai filter/kategori Kegiatan, bukan section beranda tersendiri.
+- Tambahkan `Ringkasan kegiatan` pada detail berisi status, desa, tanggal, penerima manfaat, dan hasil utama.
+- Pada detail UMKM, urutan informasi harus menjadi produk → cara memesan → lokasi/jam → cerita usaha → pendampingan KKN.
+
+**Alasan**
+
+Konten yang membantu pengunjung memutuskan tindakan harus muncul sebelum struktur organisasi, metodologi data, dan rincian pendukung.
+
+### 6.3 User flow
+
+**Temuan**
+
+- Jalur kegiatan sudah tersedia, tetapi pengguna harus melewati banyak pilihan yang serupa.
+- Jalur UMKM belum selesai ketika kontak tidak tersedia; tombol yang tampak nonaktif menjadi jalan buntu.
+- Filter berbasis kelompok berguna bagi mahasiswa, tetapi warga dan pembeli juga membutuhkan filter desa dan kategori yang lebih eksplisit.
+- Tidak ada tindakan berbagi yang terlihat pada awal detail kegiatan atau UMKM.
+
+**Rekomendasi**
+
+- Sediakan empat alur utama pada bagian 9 dokumen ini.
+- Pertahankan filter kelompok, tetapi selalu pasangkan dengan nama desa.
+- Jika WhatsApp belum terverifikasi, jangan tampilkan kontrol bergaya tombol. Tampilkan pesan informatif dan alternatif yang valid, misalnya `Lihat produk` atau `Buka lokasi`.
+- Tambahkan `Bagikan` pada detail kegiatan dan detail UMKM menggunakan Web Share API dengan fallback salin tautan.
+
+**Alasan**
+
+Setiap flow harus memiliki akhir yang jelas. Kontrol nonaktif yang terlihat seperti CTA utama menimbulkan harapan yang tidak dapat dipenuhi.
+
+### 6.4 Kejelasan CTA
+
+**Temuan**
+
+- `Jelajahi kegiatan` kuat secara visual, tetapi terlalu sering diulang.
+- CTA hero sekunder `Kenali tiga kelompok` menjelaskan struktur tim, bukan kebutuhan utama pengguna.
+- Card kegiatan dan UMKM memiliki link detail yang jelas.
+- Detail kegiatan tidak memiliki CTA utama di area judul.
+- Detail UMKM menampilkan `Kontak belum tersedia` di posisi CTA utama.
+
+**Rekomendasi**
+
+- Hero memakai dua jalur yang eksplisit:
+  - utama: `Lihat kegiatan terbaru`;
+  - sekunder: `Cari produk UMKM`.
+- CTA global header: `Temukan produk UMKM`.
+- Detail kegiatan: `Lihat dokumentasi` dan `Bagikan`.
+- Detail UMKM: `Pesan via WhatsApp` hanya jika nomor terverifikasi; sekunder `Lihat lokasi` dan `Bagikan`.
+- Gunakan satu CTA utama per konteks. Link lain memakai gaya sekunder atau text link.
+
+**Alasan**
+
+Label CTA harus menyatakan hasil setelah klik, bukan sekadar ajakan umum seperti “jelajahi”.
+
+### 6.5 Aksesibilitas
+
+**Kekuatan terkonfirmasi**
+
+- Ada skip link menuju konten utama.
+- Heading dan landmark tersusun secara semantik.
+- Menu mobile mengumumkan keadaan buka/tutup.
+- Tombol menu sekitar target sentuh minimum dan focus ring terlihat.
+- Teks body pada mobile cukup besar dan memiliki jarak baris yang nyaman.
+
+**Risiko**
+
+- Warna biru `#4F8FBE` pada latar `#FAF9F5` memiliki rasio sekitar `3.32:1`; ini belum cukup untuk teks kecil normal yang memerlukan `4.5:1`.
+- Badge T1 memakai `#B95E80` pada `#FBEAF1` dengan rasio sekitar `3.65:1`; teks kecil badge berisiko tidak memenuhi kontras minimum.
+- Menu mobile terbuka tanpa backdrop yang cukup jelas; konten hero di belakang tetap bersaing secara visual.
+- Perlu dipastikan menu mengunci scroll halaman, menjebak fokus secara wajar, dapat ditutup dengan `Escape`, dan mengembalikan fokus ke tombol pemicu.
+- Breadcrumb mobile membungkus separator dan judul menjadi beberapa baris yang sulit dipindai.
+- Label abu-abu kecil pada daftar isi dan metadata perlu diuji pada perangkat dengan kecerahan rendah.
+
+**Rekomendasi minimum**
+
+- Gunakan warna link/eyebrow kecil yang mencapai `4.5:1`.
+- Gelapkan warna teks T1 atau gunakan latar yang lebih terang.
+- Target sentuh minimum `44 × 44px` dengan jarak antarkontrol yang cukup.
+- Pertahankan indikator fokus minimum `3:1` terhadap warna di sekelilingnya.
+- Tambahkan backdrop menu, `Escape`, pengembalian fokus, dan pencegahan scroll latar.
+- Uji kembali dengan keyboard penuh, pembaca layar, zoom 200–400%, dan mode `prefers-reduced-motion`.
+
+### 6.6 Tampilan mobile
+
+**Temuan**
+
+- Hero mobile tersusun rapi, terbaca, dan tidak mengalami overflow horizontal.
+- Dua CTA hero bertumpuk dengan baik, tetapi mendorong foto utama ke bawah fold.
+- Menu mobile cukup jelas, tetapi panel dan latar memiliki kontras pemisah yang lemah.
+- Judul artikel panjang masih terbaca, namun breadcrumb mengambil ruang dan menghasilkan baris separator yang canggung.
+- Detail kegiatan sangat panjang; daftar isi membantu, tetapi keadaan terbuka menambah tinggi halaman sebelum konten utama.
+- Detail UMKM menampilkan informasi pemilik dan jam sebelum foto produk/produk, sehingga calon pembeli belum melihat apa yang dijual pada satu layar pertama.
+
+**Rekomendasi**
+
+- Pada hero mobile, tampilkan satu CTA utama dan satu text link agar foto atau bukti visual muncul lebih cepat.
+- Jadikan daftar isi mobile tertutup secara default, tetapi tetap menampilkan label dan jumlah bagian.
+- Gunakan sticky action bar yang ringan pada detail UMKM ketika kontak terverifikasi.
+- Letakkan foto produk dan CTA pesan sebelum metadata pemilik yang kurang penting bagi keputusan awal.
+- Uji pada lebar `320px`, `360px`, `390px`, dan `430px`.
+
+### 6.7 Masalah khusus beranda
+
+1. Beranda terlalu panjang karena mengulang kegiatan dalam beberapa bentuk.
+2. Konten terpenting bagi warga dan pembeli muncul terlalu jauh setelah struktur kelompok.
+3. CTA global dan CTA hero terlalu fokus pada Kegiatan.
+4. Ringkasan kelompok menggunakan kode internal sebagai pembeda utama.
+5. Belum ada entry point cepat berdasarkan kebutuhan: kegiatan desa, produk, dan ringkasan hasil.
+6. Label status dan data dummy jujur, tetapi terlalu dominan untuk pengalaman publik.
+
+### 6.8 Masalah khusus halaman detail
+
+**Detail kegiatan**
+
+- Kuat dalam bukti dan transparansi.
+- Judul, deskripsi, metadata, dan hero image membentuk pembukaan yang jelas.
+- Informasi penting baru tersebar di beberapa section; perlu ringkasan cepat.
+- Hero image besar menghasilkan jarak tempuh panjang sebelum daftar isi dan isi.
+- Tidak ada CTA berbagi atau navigasi aksi di atas fold.
+- Bukti, output, dan indikator dapat terasa berulang jika tidak dikelompokkan.
+
+**Detail UMKM**
+
+- Nama, kategori, desa, jam, produk, lokasi, dan pendampingan tersedia.
+- Foto placeholder dan tombol kontak nonaktif membuat halaman terasa belum siap dipromosikan.
+- Produk dan cara membeli tidak diprioritaskan.
+- Narasi “data belum tersedia” muncul beberapa kali dan mendominasi halaman.
+- Tautan katalog menuju URL contoh harus dianggap tidak dapat dipublikasikan.
+
+---
+
+## 7. Sitemap rekomendasi
+
+```text
+Beranda /
+├── Kegiatan /kegiatan
+│   ├── Filter: desa/kelompok
+│   ├── Filter: kategori
+│   ├── Filter: status
+│   └── Detail kegiatan /kegiatan/[kelompok]/[slug]
+├── UMKM /umkm
+│   ├── Pencarian produk atau nama usaha
+│   ├── Filter: kategori
+│   ├── Filter: desa
+│   └── Detail UMKM /umkm/[kelompok]/[slug]
+├── Galeri /galeri
+│   ├── Filter: desa
+│   ├── Filter: kegiatan
+│   └── Setiap foto kembali ke detail kegiatan sumber
+└── Informasi pendukung di footer
+    ├── Tentang program
+    ├── Kebijakan dan status verifikasi data
+    └── Kontak tim/desa jika telah disetujui untuk publik
 ```
 
-Ketentuan:
+Keputusan sitemap:
 
-1. `index.html` berisi seluruh struktur halaman preview.
-2. `style.css` berisi seluruh styling dan responsive layout.
-3. `script.js` hanya dibuat jika diperlukan untuk interaksi sederhana.
-4. Tidak menggunakan framework.
-5. Tidak menggunakan build tool.
-6. Tidak menggunakan dependency eksternal selain font dari Google Fonts jika diperlukan.
-7. Preview harus dapat dibuka langsung melalui browser.
+- Tidak menambah `Sekolah` sebagai entitas publik.
+- Tidak membuat halaman detail foto terpisah.
+- Tidak membuat halaman T1/T2/T3 tersendiri; filter sudah cukup.
+- Informasi transparansi data ditempatkan di footer atau panel kontekstual, bukan menjadi tujuan navigasi utama.
 
 ---
 
-## 3. Scope Preview
+## 8. User flow rekomendasi
 
-Preview cukup mencakup satu halaman panjang yang merepresentasikan komponen utama website.
+### 8.1 Warga desa mencari kegiatan
 
-Bagian yang harus ditampilkan:
+1. Beranda.
+2. Pilih desa dari `Ringkasan per desa` atau buka `Kegiatan`.
+3. Lihat daftar yang sudah terfilter berdasarkan desa.
+4. Buka detail kegiatan.
+5. Baca ringkasan, lihat dokumentasi dan hasil.
+6. Bagikan tautan atau lanjut ke kegiatan terkait.
 
-1. Header dan navigasi.
-2. Hero section.
-3. Ringkasan tiga kelompok KKN.
-4. Section kegiatan terbaru.
-5. Section UMKM binaan.
-6. Sorotan kegiatan edukasi sebagai bagian dari dokumentasi kegiatan, bukan promosi sekolah.
-7. Galeri foto yang bersumber dari artikel kegiatan.
-8. Call to action atau informasi singkat.
+Target: kegiatan relevan dapat ditemukan dalam maksimal dua keputusan setelah beranda.
+
+### 8.2 Calon pembeli mencari produk UMKM
+
+1. Beranda.
+2. Klik `Cari produk UMKM`.
+3. Cari nama produk/usaha atau pilih kategori dan desa.
+4. Buka profil UMKM.
+5. Lihat foto, harga/rentang harga, jam, dan metode pemesanan.
+6. Klik `Pesan via WhatsApp` atau `Lihat lokasi`.
+
+Target: CTA pemesanan yang valid terlihat tanpa harus membaca riwayat pendampingan.
+
+### 8.3 Mahasiswa mencari dokumentasi kelompok
+
+1. Buka `Kegiatan`.
+2. Filter kelompok, status, atau kategori.
+3. Buka detail.
+4. Periksa ringkasan, output, penerima manfaat, bukti, dan indikator.
+5. Bagikan tautan dokumentasi atau buka kegiatan berikutnya.
+
+Target: status rencana, berlangsung, dan selesai tidak pernah tercampur.
+
+### 8.4 Perangkat desa memeriksa hasil program
+
+1. Beranda.
+2. Buka `Ringkasan per desa`.
+3. Lihat jumlah kegiatan, status, penerima manfaat, dan output terverifikasi.
+4. Buka detail kegiatan.
+5. Periksa bukti, catatan verifikasi, dan indikator.
+6. Bagikan atau cetak halaman bila diperlukan.
+
+Target: angka rencana dan angka realisasi selalu memiliki label sumber/status.
+
+---
+
+## 9. Susunan section setiap halaman
+
+### 9.1 Beranda
+
+1. **Header**
+   - logo;
+   - Beranda, Kegiatan, UMKM, Galeri;
+   - CTA `Temukan produk UMKM`.
+2. **Hero**
+   - identitas wilayah;
+   - satu kalimat nilai utama;
+   - CTA `Lihat kegiatan terbaru`;
+   - text link `Cari produk UMKM`;
+   - satu foto utama nyata.
+3. **Akses cepat berdasarkan desa**
+   - Sumbakeling, Silebu, Pancalang;
+   - jumlah kegiatan dan status singkat;
+   - kode T1/T2/T3 sebagai metadata.
+4. **Kegiatan terbaru**
+   - maksimal tiga card;
+   - status, tanggal, desa, judul, ringkasan;
+   - CTA `Lihat semua kegiatan`.
+5. **UMKM pilihan**
+   - maksimal tiga profil dengan data terverifikasi;
+   - foto produk, kategori, desa, rentang harga bila tersedia;
+   - CTA `Lihat produk` atau `Hubungi usaha`.
+6. **Ringkasan dampak program**
+   - angka hanya dari data terverifikasi;
+   - pisahkan rencana dan realisasi;
+   - link menuju kegiatan sumber.
+7. **Galeri terbaru**
+   - empat sampai enam foto;
+   - setiap foto menuju kegiatan sumber.
+8. **Catatan transparansi data**
+   - singkat dan tidak mengganggu alur utama.
+9. **CTA akhir**
+   - `Lihat semua kegiatan` atau `Temukan UMKM`.
+10. **Footer**
+   - navigasi;
+   - tiga desa;
+   - kebijakan verifikasi;
+   - kontak publik bila tersedia.
+
+Section `Peta rencana program` dan `Kegiatan edukasi` tidak berdiri sendiri di beranda. Keduanya digabung ke ringkasan desa atau menjadi filter pada Kegiatan.
+
+### 9.2 Daftar Kegiatan
+
+1. Header.
+2. Judul dan penjelasan singkat.
+3. Pencarian judul/kata kunci.
+4. Filter desa/kelompok, kategori, dan status.
+5. Ringkasan hasil, misalnya `7 kegiatan ditemukan`.
+6. Grid/list card kegiatan.
+7. Empty state dengan tombol reset filter.
+8. Pagination atau `Muat lebih banyak`.
 9. Footer.
-10. Satu contoh potongan layout artikel detail kegiatan.
 
-Tidak perlu membuat banyak file HTML untuk setiap route. Semua contoh tampilan boleh ditempatkan dalam satu halaman agar proses evaluasi desain lebih cepat. Manusia rupanya tetap perlu melihat bentuk benda sebelum percaya bahwa benda itu akan bekerja.
+Pada mobile, filter dibuka melalui tombol `Filter`, menampilkan jumlah filter aktif, dan dapat dibersihkan dalam satu tindakan.
 
-### 3.1 Batasan promosi dan struktur publik
+### 9.3 Detail Kegiatan
 
-1. Hanya UMKM yang dipromosikan melalui card profil, overview, dan halaman detail tersendiri.
-2. Sekolah tidak memiliki item navigasi, overview, halaman detail, card profil, CTA kunjungan, atau copy promosi.
-3. Sekolah boleh muncul secara faktual sebagai lokasi, sasaran, mitra, atau penerima manfaat di card dan artikel kegiatan.
-4. Struktur navigasi publik yang direpresentasikan preview adalah `Beranda`, `Kegiatan`, `UMKM`, dan `Galeri`.
-5. Galeri merepresentasikan seluruh gambar yang benar-benar tampil pada artikel kegiatan dan setiap item mengarah kembali ke artikel sumber.
+1. Header.
+2. Breadcrumb desktop / tautan kembali mobile.
+3. Badge desa/kelompok, kategori, dan status.
+4. Judul dan ringkasan satu paragraf.
+5. Metadata utama: tanggal, lokasi, status verifikasi.
+6. CTA `Lihat dokumentasi` dan `Bagikan`.
+7. Hero image.
+8. Daftar isi desktop sticky / mobile collapsed.
+9. Ringkasan kegiatan:
+   - penerima manfaat;
+   - hasil utama;
+   - bantuan fisik;
+   - status indikator.
+10. Cerita pelaksanaan dengan urutan kronologis.
+11. Galeri bukti.
+12. Output dan bantuan.
+13. Indikator serta catatan verifikasi.
+14. Navigasi sebelumnya/berikutnya.
+15. Kegiatan terkait.
+16. Footer.
 
----
+### 9.4 Daftar UMKM
 
-## 4. Design Direction
+1. Header.
+2. Hero direktori dengan CTA dan penjelasan bahwa kontak hanya ditampilkan setelah verifikasi.
+3. Pencarian nama usaha atau produk.
+4. Filter kategori dan desa.
+5. UMKM pilihan/terverifikasi.
+6. Grid seluruh hasil.
+7. Empty state.
+8. Catatan keamanan dan sumber data.
+9. Footer.
 
-Arah desain utama:
+Card minimum:
 
-```txt
-Humanis
-+
-Bernuansa desa
-+
-Modern
-+
-Hangat
-+
-Mudah dibaca
-```
+- foto produk/usaha;
+- nama;
+- kategori;
+- desa;
+- satu produk utama atau rentang harga;
+- indikator `Kontak tersedia` bila benar;
+- CTA `Lihat produk`.
 
-Karakter visual yang diharapkan:
+### 9.5 Detail UMKM
 
-- terasa dekat dengan masyarakat,
-- tidak terlalu formal,
-- tidak terasa seperti dashboard pemerintahan,
-- tidak terlalu ramai,
-- memakai elemen visual yang lembut,
-- menampilkan foto sebagai bagian utama cerita,
-- tetap terlihat modern dan terstruktur.
+1. Header.
+2. Breadcrumb desktop / tautan kembali mobile.
+3. Badge desa dan kategori.
+4. Nama usaha, tagline, dan deskripsi singkat.
+5. Foto utama/galeri produk.
+6. CTA:
+   - `Pesan via WhatsApp` bila nomor terverifikasi;
+   - `Lihat lokasi`;
+   - `Bagikan`.
+7. Informasi cepat:
+   - jam operasional;
+   - cara pesan;
+   - area layanan;
+   - rentang harga.
+8. Produk unggulan dengan foto dan harga.
+9. Cerita usaha.
+10. Lokasi/peta.
+11. Bentuk pendampingan KKN.
+12. Data dampak yang sudah terverifikasi.
+13. UMKM terkait.
+14. Footer.
 
-Nuansa desa tidak boleh diterjemahkan secara berlebihan menjadi ornamen tradisional di setiap sudut. Gunakan pendekatan yang lebih halus melalui warna alami, bentuk organik, tekstur ringan, ilustrasi garis, dan komposisi foto.
+Jika kontak belum tersedia, tampilkan pesan informatif biasa. Jangan gunakan tombol nonaktif sebagai CTA utama.
 
----
+### 9.6 Galeri
 
-## 5. Design Tokens
+1. Header.
+2. Judul dan penjelasan bahwa foto berasal dari kegiatan.
+3. Filter desa dan kegiatan.
+4. Grid foto dengan caption ringkas.
+5. Lightbox dengan tombol tutup, navigasi keyboard, dan caption.
+6. Link `Lihat cerita kegiatan` pada setiap item.
+7. Footer.
 
-### 5.1 Warna Utama
+### 9.7 Halaman 404
 
-Warna utama website adalah biru muda.
-
-Rekomendasi awal:
-
-```css
---color-primary: #7CB9E8;
---color-primary-dark: #4F8FBE;
---color-primary-soft: #EAF6FD;
-```
-
-Fungsi:
-
-- tombol utama,
-- link,
-- highlight navigasi,
-- elemen dekoratif,
-- background section tertentu.
-
----
-
-### 5.2 Warna Kelompok
-
-#### T1
-
-Karakter warna: merah muda.
-
-```css
---color-t1: #E89AB7;
---color-t1-soft: #FBEAF1;
---color-t1-dark: #B95E80;
-```
-
-#### T2
-
-Karakter warna: maroon.
-
-```css
---color-t2: #7A263A;
---color-t2-soft: #F4E7EA;
---color-t2-dark: #501725;
-```
-
-#### T3
-
-Karakter warna: olive drab gelap.
-
-```css
---color-t3: #556B2F;
---color-t3-soft: #EDF1E5;
---color-t3-dark: #39481F;
-```
-
-Warna kelompok digunakan untuk:
-
-- badge kelompok,
-- accent card,
-- label kategori,
-- decorative line,
-- background lembut,
-- state aktif filter.
-
-Warna kelompok tidak boleh mengambil alih seluruh desain halaman.
+1. Pesan sederhana.
+2. CTA `Kembali ke beranda`.
+3. Link `Lihat kegiatan` dan `Cari UMKM`.
 
 ---
 
-### 5.3 Warna Netral
+## 10. Keputusan desain dan alasannya
 
-Rekomendasi awal:
-
-```css
---color-background: #FAF9F5;
---color-surface: #FFFFFF;
---color-surface-soft: #F3F0E8;
---color-text: #24313A;
---color-text-muted: #66727A;
---color-border: #DDD9CF;
---color-dark: #1E2A30;
-```
-
-Catatan:
-
-- background utama sebaiknya tidak putih murni,
-- gunakan warna krem sangat muda agar terasa lebih hangat,
-- teks utama harus tetap memiliki kontras tinggi.
+| Keputusan | Alasan |
+| --- | --- |
+| Mempertahankan empat menu utama | Struktur saat ini sudah sederhana dan mudah dipahami |
+| Mengubah CTA global menjadi UMKM | Menghilangkan duplikasi Kegiatan dan menyeimbangkan dua fungsi situs |
+| Memakai desa sebagai label utama | Warga lebih mengenali desa daripada kode kelompok |
+| Mengurangi pengulangan section beranda | Memperpendek halaman dan memperjelas prioritas |
+| Menempatkan kegiatan terbaru sebelum peta program | Pengunjung lebih sering mencari apa yang baru/terjadi daripada struktur rencana |
+| Menampilkan UMKM lebih awal | Mendukung tujuan promosi dan flow calon pembeli |
+| Menambahkan ringkasan pada detail kegiatan | Membantu scanning sebelum membaca artikel panjang |
+| Memindahkan pendampingan KKN ke bawah pada detail UMKM | Keputusan pembelian bergantung pada produk, harga, cara pesan, dan lokasi |
+| Menghilangkan CTA nonaktif | Mencegah jalan buntu dan ekspektasi palsu |
+| Menutup daftar isi mobile secara default | Mengurangi panjang awal tanpa kehilangan navigasi internal |
+| Mengganti breadcrumb mobile dengan tautan kembali | Menghindari pembungkus separator dan judul yang canggung |
+| Menambahkan CTA berbagi | Dokumentasi warga dan promosi UMKM membutuhkan distribusi melalui aplikasi pesan |
+| Menampilkan hanya angka terverifikasi | Menjaga kepercayaan dan mencegah rencana dianggap sebagai realisasi |
 
 ---
 
-## 6. Typography
+## 11. Prioritas perbaikan
 
-Gunakan kombinasi font yang humanis, ramah, dan mudah dibaca.
+### P0 — harus diselesaikan sebelum visual final
 
-Rekomendasi awal:
+1. Tetapkan hierarki CTA: Kegiatan dan UMKM mendapat jalur yang jelas.
+2. Pangkas dan urutkan ulang section beranda.
+3. Prioritaskan produk, kontak, dan lokasi pada detail UMKM.
+4. Definisikan state ketika WhatsApp, harga, foto, atau lokasi belum terverifikasi.
+5. Perbaiki warna teks biru kecil dan badge T1 agar memenuhi kontras minimum.
+6. Perbaiki breadcrumb mobile.
+7. Tetapkan perilaku menu mobile: backdrop, scroll lock, `Escape`, focus trap, dan return focus.
+8. Pastikan URL contoh dan data `[DUMMY]` tidak masuk versi publik.
 
-```txt
-Heading: Fraunces / Lora / Libre Baskerville
-Body: Inter / Source Sans 3 / Nunito Sans
-```
+### P1 — dampak tinggi setelah struktur disetujui
 
-Pilihan default yang disarankan:
+1. Tambahkan pencarian dan filter desa/kategori/status.
+2. Tambahkan ringkasan cepat pada detail kegiatan.
+3. Tambahkan CTA berbagi.
+4. Jadikan daftar isi mobile collapsed secara default.
+5. Gabungkan output, bantuan, bukti, dan indikator agar tidak terasa berulang.
+6. Tambahkan indikator data terverifikasi yang konsisten.
+7. Uji keyboard, screen reader, zoom, dan target sentuh.
 
-```txt
-Heading: Lora
-Body: Inter
-```
+### P2 — penyempurnaan
 
-Alasan:
-
-- `Lora` memberi nuansa editorial dan humanis,
-- `Inter` menjaga keterbacaan pada konten panjang dan mobile.
-
-Skala typography awal:
-
-```css
---font-size-xs: 0.75rem;
---font-size-sm: 0.875rem;
---font-size-base: 1rem;
---font-size-lg: 1.125rem;
---font-size-xl: 1.375rem;
---font-size-2xl: 1.75rem;
---font-size-3xl: 2.25rem;
---font-size-4xl: 3rem;
-```
-
-Aturan:
-
-1. Heading menggunakan serif.
-2. Body menggunakan sans-serif.
-3. Line-height body antara `1.6` sampai `1.8`.
-4. Panjang teks artikel maksimal sekitar `680px–760px`.
-5. Heading tidak boleh terlalu rapat.
-6. Typography mobile harus tetap nyaman tanpa ukuran judul berlebihan.
+1. Sticky action bar ringan pada detail UMKM mobile.
+2. Empty state dan reset filter yang lebih membantu.
+3. Penyesuaian caption galeri dan related content.
+4. Pengukuran analitik untuk CTA Kegiatan, UMKM, WhatsApp, lokasi, dan berbagi.
+5. Optimasi panjang copy dan metadata card berdasarkan data produksi.
 
 ---
 
-## 7. Layout System
+## 12. Kriteria penerimaan redesign
 
-### 7.1 Container
+Redesign dianggap siap masuk tahap visual apabila:
 
-```css
---container-max: 1200px;
---content-max: 760px;
-```
-
-Aturan:
-
-- halaman utama memakai container maksimal sekitar `1200px`,
-- artikel detail memakai lebar maksimal sekitar `760px`,
-- section diberi ruang vertikal yang cukup,
-- konten tidak boleh menempel ke sisi layar.
-
----
-
-### 7.2 Spacing
-
-Gunakan sistem spacing konsisten:
-
-```css
---space-1: 0.25rem;
---space-2: 0.5rem;
---space-3: 0.75rem;
---space-4: 1rem;
---space-5: 1.5rem;
---space-6: 2rem;
---space-7: 3rem;
---space-8: 4rem;
---space-9: 6rem;
-```
+1. Setiap target pengguna memiliki flow yang berakhir pada tindakan jelas.
+2. Dua fungsi situs—dokumentasi kegiatan dan promosi UMKM—terlihat pada layar pertama.
+3. Tidak ada kegiatan yang diulang dalam lebih dari dua section beranda.
+4. Nama desa lebih menonjol daripada kode kelompok.
+5. Detail kegiatan memiliki ringkasan sebelum isi panjang.
+6. Detail UMKM menampilkan produk dan CTA valid sebelum pendampingan KKN.
+7. Tidak ada tombol utama nonaktif tanpa alternatif.
+8. Kontras teks normal minimal `4.5:1`; teks besar dan komponen UI minimal `3:1`.
+9. Semua kontrol dapat digunakan dengan keyboard dan memiliki focus state.
+10. Mobile tidak mengalami overflow pada lebar `320px`.
+11. Target sentuh minimal `44 × 44px`.
+12. Menu mobile mengelola fokus, backdrop, dan scroll latar dengan benar.
+13. Rencana, berlangsung, selesai, dan terverifikasi memiliki arti serta tampilan yang konsisten.
+14. Data dummy, URL contoh, dan kontak yang belum aman tidak muncul pada versi publik.
 
 ---
 
-### 7.3 Border Radius
+## 13. Batasan tahap berikutnya
 
-Gunakan bentuk sedikit membulat untuk memberi kesan ramah.
+Tahap setelah dokumen ini disetujui adalah membuat wireframe rendah fidelitas untuk:
 
-```css
---radius-sm: 8px;
---radius-md: 14px;
---radius-lg: 22px;
---radius-pill: 999px;
-```
+1. beranda desktop dan mobile;
+2. daftar Kegiatan;
+3. detail Kegiatan;
+4. daftar UMKM;
+5. detail UMKM.
 
-Card tidak perlu terlalu membulat seperti aplikasi anak-anak.
-
----
-
-### 7.4 Shadow
-
-Gunakan shadow tipis.
-
-```css
---shadow-sm: 0 4px 14px rgba(30, 42, 48, 0.06);
---shadow-md: 0 10px 30px rgba(30, 42, 48, 0.10);
-```
-
-Shadow tidak boleh terlalu tebal atau gelap.
-
----
-
-## 8. Responsive Breakpoints
-
-Gunakan pendekatan mobile-first.
-
-Rekomendasi breakpoint:
-
-```css
-@media (min-width: 640px) {}
-@media (min-width: 768px) {}
-@media (min-width: 1024px) {}
-@media (min-width: 1280px) {}
-```
-
-Perilaku:
-
-- mobile: satu kolom,
-- tablet: dua kolom bila cukup,
-- desktop: tiga kolom untuk card tertentu,
-- navigasi mobile menggunakan menu sederhana,
-- section hero berubah dari satu kolom menjadi dua kolom pada desktop.
-
----
-
-## 9. Struktur Halaman Preview
-
-### 9.1 Header
-
-Isi:
-
-- logo atau nama website,
-- menu `Beranda`,
-- `Kegiatan`,
-- `UMKM`,
-- `Galeri`,
-- tombol kecil seperti `Jelajahi Kegiatan`.
-
-Desktop:
-
-- logo di kiri,
-- menu di tengah atau kanan,
-- CTA di sisi kanan.
-
-Mobile:
-
-- logo di kiri,
-- tombol menu di kanan,
-- menu dapat dibuka melalui `script.js`.
-
-Header bersifat ringan dan tidak terlalu tinggi.
-
----
-
-### 9.2 Hero Section
-
-Struktur desktop:
-
-```txt
-Kolom kiri:
-- badge kecil
-- heading utama
-- paragraf pendek
-- tombol utama
-- tombol sekunder
-
-Kolom kanan:
-- placeholder gambar besar
-- kartu statistik atau badge dekoratif
-```
-
-Contoh teks boleh mengarang, misalnya:
-
-```txt
-Cerita, karya, dan pengabdian dari tiga desa.
-```
-
-Hero harus menunjukkan karakter website sejak pertama dilihat:
-
-- hangat,
-- dekat dengan masyarakat,
-- berbasis dokumentasi foto,
-- tidak terasa seperti portal berita formal.
-
-Gunakan bentuk background organik atau blok warna lembut sebagai dekorasi.
-
----
-
-### 9.3 Ringkasan Kelompok
-
-Tampilkan tiga card:
-
-- T1 — Desa Sumbakeling,
-- T2 — Desa Silebu,
-- T3 — Desa Pancalang.
-
-Masing-masing card memakai accent warna kelompok.
-
-Isi card:
-
-- badge kelompok,
-- nama desa,
-- deskripsi singkat,
-- jumlah kegiatan dummy,
-- link untuk melihat kelompok.
-
-Perbedaan warna harus jelas tetapi tetap harmonis.
-
----
-
-### 9.4 Kegiatan Terbaru
-
-Tampilkan 3–6 card kegiatan.
-
-Isi card:
-
-- placeholder gambar,
-- badge kelompok,
-- tanggal,
-- judul,
-- deskripsi singkat,
-- link baca selengkapnya.
-
-Card harus lebih berorientasi visual dan editorial, bukan seperti card dashboard.
-
----
-
-### 9.5 UMKM Binaan
-
-Gunakan layout yang sedikit berbeda dari kegiatan agar halaman tidak monoton.
-
-Rekomendasi:
-
-- satu card besar unggulan,
-- dua card kecil,
-- informasi nama usaha,
-- kategori,
-- desa,
-- tombol WhatsApp dummy.
-
-Gunakan accent biru muda dan warna kelompok secukupnya.
-
-Section ini merupakan area promosi utama website. Copy boleh menonjolkan identitas usaha, produk, keunggulan, jam operasional, lokasi, serta kontak yang terverifikasi tanpa mengubah halaman menjadi marketplace.
-
----
-
-### 9.6 Sorotan Kegiatan Edukasi
-
-Tampilkan section dengan:
-
-- satu gambar utama dari artikel kegiatan,
-- teks pengantar tentang proses atau manfaat kegiatan edukasi,
-- daftar singkat kegiatan edukasi dari T1, T2, dan T3 bila tersedia,
-- satu atau dua card kegiatan yang mengarah ke `/kegiatan/[kelompok]/[slug]`.
-
-Nuansa section boleh lebih terang dan bersih.
-
-Jangan menampilkan card profil sekolah, logo/nama sekolah sebagai materi promosi, informasi kunjungan, atau tombol menuju `/sekolah`. Nama sekolah hanya boleh menjadi metadata faktual pada kegiatan bila telah terverifikasi.
-
----
-
-### 9.7 Galeri
-
-Gunakan grid foto sederhana.
-
-Rekomendasi:
-
-- masonry palsu melalui variasi ukuran grid,
-- placeholder abu-abu atau gambar lokal yang juga dipakai pada contoh artikel kegiatan,
-- hover menampilkan caption dan judul kegiatan sumber,
-- tidak perlu lightbox kompleks.
-
-Pada mobile, gunakan dua kolom atau satu kolom tergantung ukuran layar.
-
-Galeri tidak menampilkan koleksi foto sekolah atau produk UMKM yang berdiri sendiri. Semua item harus merepresentasikan gambar pada halaman kegiatan dan dapat diklik menuju artikel kegiatan sumber.
-
----
-
-### 9.8 Informasi atau Call to Action
-
-Buat satu section berwarna biru muda lembut.
-
-Isi contoh:
-
-- pesan singkat tentang dokumentasi KKN,
-- tombol menuju kegiatan,
-- ornamen sederhana.
-
-CTA tidak harus menjual sesuatu. Website ini dokumentasi, bukan marketplace yang mengalami krisis identitas.
-
----
-
-### 9.9 Footer
-
-Isi:
-
-- nama website,
-- deskripsi singkat,
-- link navigasi,
-- informasi tiga kelompok,
-- copyright dummy.
-
-Footer menggunakan warna gelap dengan kontras yang nyaman.
-
-Link navigasi footer mengikuti header dan tidak memuat menu `Sekolah`.
-
----
-
-## 10. Preview Layout Artikel Detail
-
-Tambahkan satu section khusus yang memperlihatkan contoh halaman artikel.
-
-Struktur:
-
-```txt
-Breadcrumb
-↓
-Badge kelompok
-↓
-Judul artikel
-↓
-Metadata tanggal dan lokasi
-↓
-Hero image
-↓
-Konten artikel
-↓
-Heading bagian
-↓
-Paragraf
-↓
-Info box
-↓
-Gambar tambahan
-↓
-Table of contents sederhana di desktop
-```
-
-Kebutuhan:
-
-- article body mudah dibaca,
-- heading memiliki hierarki jelas,
-- gambar memiliki caption,
-- info box menggunakan warna lembut,
-- table of contents tidak perlu sticky jika menyulitkan preview.
-
----
-
-## 11. Komponen Visual Dasar
-
-Preview harus memiliki contoh komponen berikut:
-
-1. Primary button.
-2. Secondary button.
-3. Text link.
-4. Badge kelompok.
-5. Card kegiatan.
-6. Card kelompok.
-7. Card UMKM.
-8. Card kegiatan edukasi.
-9. Item galeri yang tertaut ke artikel sumber.
-10. Info box.
-11. Placeholder image.
-12. Breadcrumb.
-13. Table of contents.
-14. Navigation mobile.
-15. Footer link.
-16. Empty state sederhana bila perlu.
-
----
-
-## 12. Placeholder Gambar
-
-Gambar akan disediakan kemudian.
-
-Untuk saat ini:
-
-1. Gunakan elemen placeholder dengan rasio konsisten.
-2. Gunakan background netral.
-3. Tampilkan teks kecil seperti `Placeholder 16:9`.
-4. Jangan mengambil gambar acak dari internet.
-5. Gunakan rasio berikut:
-
-```txt
-Hero: 4:3 atau 16:10
-Card kegiatan: 16:9
-Card UMKM: 4:3
-Galeri: variasi 1:1, 4:3, dan 3:4
-Artikel: 16:9
-```
-
----
-
-## 13. Interaksi JavaScript
-
-`script.js` hanya diperlukan untuk:
-
-1. membuka dan menutup menu mobile,
-2. menambahkan state aktif sederhana,
-3. filter galeri dummy jika ingin ditampilkan,
-4. scroll ke section tertentu,
-5. toggle table of contents pada mobile.
-
-Tidak perlu:
-
-- fetch API,
-- data dinamis,
-- routing SPA,
-- framework JavaScript,
-- penyimpanan state kompleks,
-- animasi berat.
-
----
-
-## 14. Animasi
-
-Gunakan animasi ringan:
-
-- hover card naik sedikit,
-- tombol memiliki transition,
-- gambar sedikit zoom saat hover,
-- section dapat memakai fade-in ringan bila sederhana.
-
-Aturan:
-
-```css
-transition-duration: 160ms–240ms;
-```
-
-Hindari:
-
-- parallax,
-- animasi berlebihan,
-- elemen bergerak terus,
-- loading palsu,
-- efek 3D.
-
----
-
-## 15. Accessibility
-
-Preview minimal harus mengikuti aturan berikut:
-
-1. Semua tombol dapat difokuskan melalui keyboard.
-2. Gunakan semantic HTML.
-3. Kontras teks harus terbaca.
-4. Ukuran area klik minimal sekitar `44px`.
-5. Heading mengikuti urutan `h1`, `h2`, `h3`.
-6. Placeholder gambar menggunakan elemen dengan label yang jelas.
-7. Menu mobile memiliki atribut `aria-expanded`.
-8. Gunakan `prefers-reduced-motion` untuk mengurangi animasi.
-
----
-
-## 16. Ketentuan Implementasi CSS
-
-Codex harus:
-
-1. menggunakan CSS custom properties,
-2. menggunakan Grid dan Flexbox,
-3. menerapkan mobile-first,
-4. menghindari inline style,
-5. tidak memakai Bootstrap, Tailwind, atau library CSS,
-6. menjaga class name tetap jelas,
-7. membagi CSS berdasarkan section menggunakan komentar,
-8. tidak membuat styling yang bergantung pada JavaScript.
-
-Contoh struktur CSS:
-
-```css
-/* Reset */
-/* Tokens */
-/* Base */
-/* Layout */
-/* Header */
-/* Hero */
-/* Groups */
-/* Activities */
-/* UMKM */
-/* Education Activities */
-/* Gallery */
-/* Article Preview */
-/* Footer */
-/* Utilities */
-/* Responsive */
-```
-
----
-
-## 17. Konten Dummy
-
-Codex bebas membuat konten dummy selama:
-
-- memakai bahasa Indonesia,
-- relevan dengan KKN,
-- menyebut T1, T2, dan T3,
-- menyebut Desa Sumbakeling, Silebu, dan Pancalang,
-- tidak memakai lorem ipsum,
-- panjang teks cukup untuk menguji layout.
-
----
-
-## 18. Batasan Preview
-
-Preview ini bukan implementasi final.
-
-Jangan mengerjakan:
-
-1. integrasi Astro,
-2. integrasi Google Sheets,
-3. MDX,
-4. pipeline Sharp,
-5. Google Drive,
-6. Cloudflare Pages,
-7. Google Apps Script,
-8. routing dinamis,
-9. SEO final,
-10. data produksi.
-
----
-
-## 19. Kriteria Evaluasi
-
-Preview dianggap berhasil jika:
-
-1. arah humanis dan bernuansa desa terasa jelas,
-2. warna biru muda menjadi identitas utama,
-3. warna T1, T2, dan T3 dapat dibedakan,
-4. hierarki konten mudah dipahami,
-5. tampilan tidak terlalu formal,
-6. card tidak terasa seperti dashboard,
-7. typography nyaman dibaca,
-8. layout mobile dan desktop tetap rapi,
-9. halaman artikel terlihat cocok untuk konten panjang,
-10. UMKM terlihat sebagai satu-satunya entitas yang dipromosikan melalui profil tersendiri,
-11. sekolah hanya tampil sebagai konteks dokumentasi kegiatan dan tidak menyerupai direktori promosi,
-12. galeri terlihat sebagai agregasi gambar dari artikel kegiatan,
-13. desain cukup jelas untuk diberi umpan balik sebelum dipindahkan ke Astro.
-
----
-
-## 20. Instruksi Akhir untuk Codex
-
-Buat preview statis berdasarkan dokumen ini.
-
-Prioritas pengerjaan:
-
-```txt
-Arah visual
-↓
-Layout
-↓
-Typography
-↓
-Warna
-↓
-Komponen
-↓
-Responsivitas
-↓
-Interaksi kecil
-```
-
-Hasil akhir cukup berupa:
-
-```txt
-index.html
-style.css
-script.js
-```
-
-Jangan mengintegrasikan preview ke proyek Astro sebelum desain mendapatkan persetujuan.
+Wireframe harus menguji urutan, panjang halaman, posisi CTA, filter, serta state data kosong. Warna final, tipografi final, ilustrasi, animasi, dan polish visual belum perlu diputuskan pada tahap tersebut.

@@ -54,13 +54,25 @@ const isActive = (href: string) =>
           ))
         }
       </ul>
-      <a class="header-cta" href="/kegiatan">Jelajahi kegiatan</a>
+      <a class="header-cta" href="/umkm">
+        <span>Temukan produk</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 10h12m-4-4 4 4-4 4" />
+        </svg>
+      </a>
     </nav>
   </div>
+  <button
+    class="navigation-backdrop"
+    type="button"
+    tabindex="-1"
+    aria-label="Tutup menu navigasi"
+    data-menu-backdrop
+  ></button>
 </header>
 
 <script>
-  const closeMenu = (header: HTMLElement) => {
+  const closeMenu = (header: HTMLElement, restoreFocus = false) => {
     const toggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
     const menu = header.querySelector<HTMLElement>('[data-menu]');
     if (!toggle || !menu) return;
@@ -68,11 +80,15 @@ const isActive = (href: string) =>
     toggle.setAttribute('aria-expanded', 'false');
     toggle.setAttribute('aria-label', 'Buka menu navigasi');
     menu.classList.remove('is-open');
+    header.classList.remove('menu-is-open');
+    document.body.classList.remove('navigation-is-open');
+    if (restoreFocus) toggle.focus();
   };
 
   document.querySelectorAll<HTMLElement>('[data-site-header]').forEach((header) => {
     const toggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
     const menu = header.querySelector<HTMLElement>('[data-menu]');
+    const backdrop = header.querySelector<HTMLButtonElement>('[data-menu-backdrop]');
     if (!toggle || !menu) return;
 
     toggle.addEventListener('click', () => {
@@ -80,31 +96,63 @@ const isActive = (href: string) =>
       toggle.setAttribute('aria-expanded', String(willOpen));
       toggle.setAttribute('aria-label', willOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi');
       menu.classList.toggle('is-open', willOpen);
+      header.classList.toggle('menu-is-open', willOpen);
+      document.body.classList.toggle('navigation-is-open', willOpen);
+      if (willOpen) menu.querySelector<HTMLAnchorElement>('a')?.focus();
     });
 
     menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => closeMenu(header)));
+    backdrop?.addEventListener('click', () => closeMenu(header, true));
+
+    header.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab' || toggle.getAttribute('aria-expanded') !== 'true') return;
+      const focusable = [toggle, ...menu.querySelectorAll<HTMLAnchorElement>('a')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
   });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      document.querySelectorAll<HTMLElement>('[data-site-header]').forEach(closeMenu);
+      document
+        .querySelectorAll<HTMLElement>('[data-site-header]')
+        .forEach((header) => closeMenu(header, true));
+    }
+  });
+
+  const desktopNavigation = window.matchMedia('(min-width: 56rem)');
+  desktopNavigation.addEventListener('change', ({ matches }) => {
+    if (matches) {
+      document
+        .querySelectorAll<HTMLElement>('[data-site-header]')
+        .forEach((header) => closeMenu(header));
     }
   });
 </script>
 
 <style>
   .site-header {
-    position: relative;
-    z-index: 20;
-    border-bottom: 1px solid rgb(221 217 207 / 72%);
-    background: rgb(250 249 245 / 88%);
-    backdrop-filter: blur(14px);
+    position: sticky;
+    z-index: 50;
+    top: 0;
+    border-bottom: 1px solid rgb(203 198 184 / 62%);
+    background: rgb(250 249 245 / 92%);
+    box-shadow: 0 0.4rem 1.5rem rgb(30 42 48 / 4%);
+    backdrop-filter: blur(18px);
   }
 
   .header-inner {
     position: relative;
     display: flex;
-    min-height: 4.75rem;
+    min-height: 4.5rem;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
@@ -125,7 +173,11 @@ const isActive = (href: string) =>
     height: 2.625rem;
     place-items: center;
     border-radius: 48% 52% 45% 55% / 56% 46% 54% 44%;
-    background: var(--color-primary-soft);
+    border: 1px solid rgb(79 143 190 / 15%);
+    background:
+      radial-gradient(circle at 72% 24%, rgb(255 255 255 / 72%), transparent 32%),
+      var(--color-primary-soft);
+    box-shadow: inset 0 0 0 0.35rem rgb(255 255 255 / 28%);
     transform: rotate(-5deg);
   }
 
@@ -168,7 +220,7 @@ const isActive = (href: string) =>
   .brand-copy strong {
     color: var(--color-dark);
     font-family: var(--font-heading);
-    font-size: 1.05rem;
+    font-size: 1.08rem;
     letter-spacing: -0.02em;
     text-transform: none;
   }
@@ -180,8 +232,8 @@ const isActive = (href: string) =>
     padding: 0.7rem;
     place-content: center;
     gap: 0.28rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
     color: var(--color-dark);
     background: var(--color-surface);
     cursor: pointer;
@@ -209,13 +261,14 @@ const isActive = (href: string) =>
 
   .main-navigation {
     position: absolute;
+    z-index: 2;
     top: calc(100% + var(--space-2));
     right: var(--gutter);
     left: var(--gutter);
     display: none;
-    padding: var(--space-4);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
     background: var(--color-surface);
     box-shadow: var(--shadow-md);
   }
@@ -223,6 +276,22 @@ const isActive = (href: string) =>
   .main-navigation.is-open {
     display: grid;
     gap: var(--space-4);
+  }
+
+  .navigation-backdrop {
+    position: fixed;
+    z-index: 1;
+    display: none;
+    padding: 0;
+    border: 0;
+    background: rgb(30 42 48 / 38%);
+    backdrop-filter: blur(2px);
+    cursor: default;
+    inset: 4.5rem 0 0;
+  }
+
+  .menu-is-open .navigation-backdrop {
+    display: block;
   }
 
   .main-navigation ul {
@@ -246,7 +315,7 @@ const isActive = (href: string) =>
     border-radius: var(--radius-sm);
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
-    font-weight: 650;
+    font-weight: 700;
     text-decoration: none;
   }
 
@@ -256,6 +325,15 @@ const isActive = (href: string) =>
     background: var(--color-primary-soft);
   }
 
+  .main-navigation ul a[aria-current='page']::before {
+    width: 0.42rem;
+    height: 0.42rem;
+    margin-right: var(--space-2);
+    border-radius: 50%;
+    background: var(--color-primary-dark);
+    content: '';
+  }
+
   .header-cta {
     display: inline-flex;
     min-height: 2.75rem;
@@ -263,17 +341,32 @@ const isActive = (href: string) =>
     justify-content: center;
     padding-inline: var(--space-4);
     border-radius: var(--radius-pill);
-    color: var(--color-dark);
-    background: var(--color-primary);
+    gap: var(--space-2);
+    color: var(--color-surface);
+    background: var(--color-dark);
     font-size: var(--font-size-sm);
     font-weight: 750;
     text-decoration: none;
-    transition: background var(--transition-fast), transform var(--transition-fast);
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast),
+      transform var(--transition-fast);
   }
 
   .header-cta:hover {
-    background: #91c7ef;
+    color: var(--color-dark);
+    background: var(--color-primary);
     transform: translateY(-1px);
+  }
+
+  .header-cta svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
   }
 
   @media (min-width: 56rem) {
@@ -305,6 +398,11 @@ const isActive = (href: string) =>
 
     .main-navigation ul a {
       padding-inline: var(--space-3);
+    }
+
+    .navigation-backdrop,
+    .menu-is-open .navigation-backdrop {
+      display: none;
     }
   }
 </style>

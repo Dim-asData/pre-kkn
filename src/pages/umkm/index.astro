@@ -36,10 +36,10 @@ const filterGroups = [
   <section class="page-intro">
     <div class="page-intro__inner container">
       <p class="eyebrow">Pemberdayaan ekonomi</p>
-      <h1>Direktori usaha lokal yang mudah dijelajahi.</h1>
+      <h1>Cari produk dan usaha lokal dari tiga desa.</h1>
       <p class="page-intro__description">
-        Temukan cerita usaha, produk unggulan, dan bentuk pendampingan KKN. Data contoh yang belum
-        terverifikasi tetap ditandai [DUMMY], sementara kontak sensitif tetap dikosongkan.
+        Temukan produk unggulan, jam operasional, lokasi, dan cara pemesanan. Kontak usaha hanya
+        ditampilkan setelah aman untuk dipublikasikan.
       </p>
       <p class="page-intro__meta">
         <strong>{data.umkm.length} UMKM publik</strong>
@@ -54,21 +54,38 @@ const filterGroups = [
       {
         data.umkm.length ? (
           <>
-            <FilterBar groups={filterGroups} resultLabel="UMKM" />
+            <FilterBar
+              groups={filterGroups}
+              resultLabel="UMKM"
+              searchPlaceholder="Cari nama usaha, produk, atau kategori"
+            />
             <div class="overview-grid overview-grid--three">
-              {data.umkm.map((item) => (
-                <div
-                  data-filter-item
-                  data-filter-kelompok={item.groupId}
-                  data-filter-kategori={item.category}
-                >
-                  <UMKMCard
-                    item={item}
-                    group={data.groups.find(({ id }) => id === item.groupId)}
-                  />
-                </div>
-              ))}
+              {
+                data.umkm.map((item) => {
+                  const group = data.groups.find(({ id }) => id === item.groupId);
+                  return (
+                    <div
+                      data-filter-item
+                      data-filter-search={[
+                        item.name,
+                        item.category,
+                        item.shortDescription,
+                        item.assistance.join(' '),
+                        group?.village ?? '',
+                      ].join(' ')}
+                      data-filter-kelompok={item.groupId}
+                      data-filter-kategori={item.category}
+                    >
+                      <UMKMCard item={item} group={group} />
+                    </div>
+                  );
+                })
+              }
             </div>
+            <p class="section-note directory-note">
+              Harga, stok, dan jam buka dapat berubah. Konfirmasi kembali kepada pemilik usaha
+              sebelum berkunjung atau memesan.
+            </p>
             <div hidden data-filter-empty class="filtered-empty">
               <EmptyState
                 title="Belum ada UMKM untuk filter ini"
@@ -94,5 +111,9 @@ const filterGroups = [
 
   .filtered-empty {
     margin-top: var(--space-6);
+  }
+
+  .directory-note {
+    margin-top: var(--space-7);
   }
 </style>

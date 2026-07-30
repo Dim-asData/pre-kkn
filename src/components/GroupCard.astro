@@ -15,12 +15,12 @@ const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.pr
 
 <article class:list={['group-card', `group-card--${group.id}`]}>
   <div class="group-card__topline">
+    <span class="group-card__place">Wilayah kegiatan</span>
     <GroupBadge kelompok={group.id} />
-    <span>{group.name}</span>
   </div>
   <div>
-    <p class="group-card__village">{group.village}</p>
-    <h3>{group.programTheme}</h3>
+    <h3>{group.village}</h3>
+    <p class="group-card__theme">{group.programTheme}</p>
   </div>
   <p>{group.shortDescription}</p>
   <dl>
@@ -37,7 +37,7 @@ const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.pr
       <dd>{educationCount}</dd>
     </div>
   </dl>
-  <TextLink href={`/kegiatan?kelompok=${group.id}`}>Jelajahi cerita kelompok</TextLink>
+  <TextLink href={`/kegiatan?kelompok=${group.id}`}>Lihat kegiatan di desa ini</TextLink>
 </article>
 
 <style>
@@ -45,11 +45,11 @@ const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.pr
     position: relative;
     display: grid;
     min-width: 0;
-    padding: var(--space-5);
+    padding: var(--space-6) var(--space-5) var(--space-5);
     align-content: start;
     gap: var(--space-4);
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
     box-shadow: var(--shadow-sm);
@@ -66,16 +66,38 @@ const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.pr
     pointer-events: none;
   }
 
+  .group-card::after {
+    position: absolute;
+    width: 4rem;
+    height: 0.32rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-primary);
+    content: '';
+    inset: 0 auto auto var(--space-5);
+  }
+
   .group-card--t1::before {
     background: var(--color-t1-soft);
+  }
+
+  .group-card--t1::after {
+    background: var(--color-t1);
   }
 
   .group-card--t2::before {
     background: var(--color-t2-soft);
   }
 
+  .group-card--t2::after {
+    background: var(--color-t2);
+  }
+
   .group-card--t3::before {
     background: var(--color-t3-soft);
+  }
+
+  .group-card--t3::after {
+    background: var(--color-t3);
   }
 
   .group-card:hover {
@@ -95,15 +117,21 @@ const { group, activityCount = 0, umkmCount = 0, educationCount = 0 } = Astro.pr
     font-weight: 700;
   }
 
-  .group-card__village {
-    margin-bottom: var(--space-1);
+  .group-card__place,
+  .group-card__theme {
     color: var(--color-text-muted);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-weight: 700;
   }
 
   h3 {
-    font-size: var(--font-size-xl);
+    font-size: clamp(1.45rem, 3vw, 1.8rem);
+  }
+
+  .group-card__theme {
+    margin-top: var(--space-1);
+    color: var(--color-link);
+    font-size: var(--font-size-sm);
   }
 
   article > p {

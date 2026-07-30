@@ -4,6 +4,7 @@ import { CATEGORY_LABELS, formatDate } from '../data/format';
 import { photoUrl } from '../lib/photos';
 import Breadcrumb from './Breadcrumb.astro';
 import GroupBadge from './GroupBadge.astro';
+import ShareButton from './ShareButton.astro';
 import StatusBadge from './StatusBadge.astro';
 
 interface Props {
@@ -45,40 +46,55 @@ const usesPlaceholder = !image;
         { label: title },
       ]}
     />
-    <div class="article-header__copy">
-      <div class="article-header__badges">
-        <GroupBadge kelompok={kelompok} showName />
-        <span class="article-header__category">{CATEGORY_LABELS[category]}</span>
-        <StatusBadge status={status} />
+    <div class="article-header__grid">
+      <div class="article-header__copy">
+        <div class="article-header__badges">
+          <GroupBadge kelompok={kelompok} showName />
+          <span class="article-header__category">{CATEGORY_LABELS[category]}</span>
+          <StatusBadge status={status} />
+        </div>
+        <h1>{title}</h1>
+        <p class="article-header__description">{description}</p>
+        <dl>
+          <div>
+            <dt>{dateLabel}</dt>
+            <dd>{displayDate ?? 'Belum ditentukan'}</dd>
+          </div>
+          <div>
+            <dt>Lokasi</dt>
+            <dd>{location}</dd>
+          </div>
+          <div>
+            <dt>Status data</dt>
+            <dd>Sudah diperiksa</dd>
+          </div>
+        </dl>
+        <div class="article-header__actions">
+          <a class="article-header__primary-action" href="#dokumentasi">
+            Lihat dokumentasi
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M10 3v12m-4-4 4 4 4-4" />
+            </svg>
+          </a>
+          <ShareButton title={title} />
+        </div>
       </div>
-      <h1>{title}</h1>
-      <p class="article-header__description">{description}</p>
-      <dl>
-        <div>
-          <dt>{dateLabel}</dt>
-          <dd>{displayDate ?? 'Belum ditentukan'}</dd>
-        </div>
-        <div>
-          <dt>Lokasi</dt>
-          <dd>{location}</dd>
-        </div>
-      </dl>
-    </div>
-    <div class="article-header__media">
-      <img
-        class="article-header__image"
-        src={photoUrl(image)}
-        alt={
-          usesPlaceholder
-            ? `[DUMMY] Placeholder gambar utama ${title}`
-            : imageAlt || `Gambar utama ${title}`
-        }
-        width="1440"
-        height="810"
-        loading="eager"
-        decoding="async"
-      />
-      {usesPlaceholder && <span>[DUMMY] Placeholder gambar rencana</span>}
+      <div class="article-header__media">
+        <img
+          class="article-header__image"
+          src={photoUrl(image)}
+          alt={
+            usesPlaceholder
+              ? `[DUMMY] Placeholder gambar utama ${title}`
+              : imageAlt || `Gambar utama ${title}`
+          }
+          width="1440"
+          height="1080"
+          loading="eager"
+          decoding="async"
+        />
+        {usesPlaceholder && <span>[DUMMY] Placeholder gambar rencana</span>}
+      </div>
     </div>
   </div>
 </header>
@@ -87,14 +103,21 @@ const usesPlaceholder = !image;
   .article-header {
     padding-block: var(--space-5) clamp(var(--space-7), 8vw, var(--space-9));
     background:
-      radial-gradient(circle at 90% 14%, rgb(124 185 232 / 19%), transparent 20rem),
-      linear-gradient(180deg, rgb(255 255 255 / 62%), transparent);
+      radial-gradient(circle at 90% 14%, rgb(124 185 232 / 21%), transparent 20rem),
+      radial-gradient(circle at 8% 110%, rgb(232 154 183 / 8%), transparent 22rem),
+      linear-gradient(180deg, rgb(255 255 255 / 68%), transparent);
+  }
+
+  .article-header__grid {
+    display: grid;
+    margin-top: var(--space-6);
+    align-items: center;
+    gap: var(--space-7);
   }
 
   .article-header__copy {
     display: grid;
     max-width: 52rem;
-    margin-top: var(--space-6);
     gap: var(--space-4);
   }
 
@@ -111,7 +134,7 @@ const usesPlaceholder = !image;
     align-items: center;
     padding: 0.22rem 0.68rem;
     border-radius: var(--radius-pill);
-    color: #2f6f9d;
+    color: var(--color-link);
     background: var(--color-primary-soft);
     font-size: var(--font-size-xs);
     font-weight: 800;
@@ -136,6 +159,38 @@ const usesPlaceholder = !image;
     gap: var(--space-4) var(--space-7);
   }
 
+  .article-header__actions {
+    display: flex;
+    margin-top: var(--space-2);
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .article-header__primary-action {
+    display: inline-flex;
+    min-height: 2.875rem;
+    padding: 0.68rem 1.05rem;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    border-radius: var(--radius-pill);
+    color: var(--color-dark);
+    background: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .article-header__primary-action svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
   dl div {
     display: grid;
     gap: var(--space-1);
@@ -157,17 +212,17 @@ const usesPlaceholder = !image;
 
   .article-header__media {
     position: relative;
-    margin-top: var(--space-7);
+    min-width: 0;
   }
 
   .article-header__image {
     width: 100%;
-    aspect-ratio: 16 / 9;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+    border: 0.45rem solid var(--color-surface);
+    border-radius: 38% 62% 46% 54% / 56% 43% 57% 44%;
     object-fit: cover;
     background: var(--color-surface-soft);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-lg);
   }
 
   .article-header__media > span {
@@ -180,5 +235,11 @@ const usesPlaceholder = !image;
     background: rgb(30 42 48 / 84%);
     font-size: var(--font-size-xs);
     font-weight: 800;
+  }
+
+  @media (min-width: 64rem) {
+    .article-header__grid {
+      grid-template-columns: minmax(0, 1.08fr) minmax(23rem, 0.92fr);
+    }
   }
 </style>

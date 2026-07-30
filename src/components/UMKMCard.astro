@@ -12,6 +12,7 @@ interface Props {
 
 const { item, group, eager = false } = Astro.props;
 const href = `/umkm/${item.groupId}/${item.slug}`;
+const hasContact = Boolean(item.whatsapp);
 ---
 
 <article class="umkm-card">
@@ -24,11 +25,15 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
     />
+    <span class="umkm-card__category">{item.category}</span>
   </a>
   <div class="umkm-card__body">
     <div class="umkm-card__badges">
-      <GroupBadge kelompok={item.groupId} />
-      <span class="umkm-card__category">{item.category}</span>
+      <GroupBadge kelompok={item.groupId} showName />
+      <span class:list={['umkm-card__contact', hasContact && 'is-available']}>
+        <span aria-hidden="true"></span>
+        {hasContact ? 'Kontak tersedia' : 'Profil usaha'}
+      </span>
     </div>
     <div>
       <p class="umkm-card__village">{group?.village ?? item.groupId.toUpperCase()}</p>
@@ -38,7 +43,7 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
     <ul aria-label="Bentuk pendampingan">
       {item.assistance.slice(0, 3).map((label) => <li>{label}</li>)}
     </ul>
-    <TextLink href={href}>Lihat profil UMKM</TextLink>
+    <TextLink href={href}>Lihat produk dan profil</TextLink>
   </div>
 </article>
 
@@ -47,10 +52,10 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
     display: grid;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 8px 28px rgb(30 42 48 / 7%);
     transition: box-shadow var(--transition-fast), transform var(--transition-fast);
   }
 
@@ -60,8 +65,23 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
   }
 
   .umkm-card__image-link {
+    position: relative;
     overflow: hidden;
     background: var(--color-surface-soft);
+  }
+
+  .umkm-card__category {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    padding: 0.34rem 0.65rem;
+    border: 1px solid rgb(255 255 255 / 55%);
+    border-radius: var(--radius-pill);
+    color: var(--color-surface);
+    background: rgb(30 42 48 / 74%);
+    font-size: 0.66rem;
+    font-weight: 800;
+    backdrop-filter: blur(8px);
   }
 
   img {
@@ -89,10 +109,28 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
     gap: var(--space-2);
   }
 
-  .umkm-card__category {
+  .umkm-card__contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     font-weight: 750;
+  }
+
+  .umkm-card__contact > span {
+    width: 0.44rem;
+    height: 0.44rem;
+    border-radius: 50%;
+    background: var(--color-text-muted);
+  }
+
+  .umkm-card__contact.is-available {
+    color: var(--color-success);
+  }
+
+  .umkm-card__contact.is-available > span {
+    background: var(--color-success);
   }
 
   .umkm-card__village {
@@ -103,7 +141,8 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
 
   h3 {
     margin-top: var(--space-1);
-    font-size: var(--font-size-xl);
+    font-size: clamp(1.25rem, 2.6vw, 1.55rem);
+    line-height: 1.25;
   }
 
   h3 a {
@@ -111,7 +150,7 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
   }
 
   h3 a:hover {
-    color: #2f6f9d;
+    color: var(--color-link);
   }
 
   .umkm-card__body > p {
@@ -130,7 +169,7 @@ const href = `/umkm/${item.groupId}/${item.slug}`;
   li {
     padding: 0.22rem 0.62rem;
     border-radius: var(--radius-pill);
-    color: #2f6f9d;
+    color: var(--color-link);
     background: var(--color-primary-soft);
     font-size: var(--font-size-xs);
     font-weight: 700;

@@ -4,7 +4,7 @@ interface Props {
   label?: string;
 }
 
-const { number, label = 'Hubungi melalui WhatsApp' } = Astro.props;
+const { number, label = 'Pesan via WhatsApp' } = Astro.props;
 const href = number ? `https://wa.me/${number}` : null;
 ---
 
@@ -15,10 +15,10 @@ const href = number ? `https://wa.me/${number}` : null;
       {label}
     </a>
   ) : (
-    <span class="whatsapp-button whatsapp-button--disabled" aria-disabled="true">
-      <span aria-hidden="true">WA</span>
-      Kontak belum tersedia
-    </span>
+    <p class="contact-unavailable">
+      <span aria-hidden="true">i</span>
+      Kontak pemesanan belum dipublikasikan. Lihat produk dan lokasi usaha terlebih dahulu.
+    </p>
   )
 }
 
@@ -50,13 +50,30 @@ const href = number ? `https://wa.me/${number}` : null;
     font-size: 0.62rem;
   }
 
-  .whatsapp-button--disabled {
-    border-color: var(--color-border);
+  .contact-unavailable {
+    display: flex;
+    max-width: 32rem;
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    align-items: flex-start;
+    gap: var(--space-2);
+    border-left: 3px solid var(--color-primary-dark);
     color: var(--color-text-muted);
-    background: var(--color-surface-soft);
+    background: var(--color-primary-soft);
+    font-size: var(--font-size-sm);
   }
 
-  .whatsapp-button--disabled > span {
-    background: var(--color-text-muted);
+  .contact-unavailable > span {
+    display: grid;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.12rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-surface);
+    background: var(--color-link);
+    font-size: 0.7rem;
+    font-weight: 800;
   }
 </style>

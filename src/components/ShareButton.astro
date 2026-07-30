@@ -1,0 +1,134 @@
+---
+interface Props {
+  title: string;
+  label?: string;
+  variant?: 'light' | 'dark';
+}
+
+const { title, label = 'Bagikan', variant = 'light' } = Astro.props;
+---
+
+<div class:list={['share-control', `share-control--${variant}`]} data-share-control>
+  <button type="button" data-share-button data-share-title={title}>
+    <svg viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="5" cy="10" r="2"></circle>
+      <circle cx="14.5" cy="5" r="2"></circle>
+      <circle cx="14.5" cy="15" r="2"></circle>
+      <path d="m6.8 9 5.8-3m-5.8 5 5.8 3"></path>
+    </svg>
+    <span>{label}</span>
+  </button>
+  <span class="share-control__status" data-share-status aria-live="polite"></span>
+</div>
+
+<script>
+  const initialiseShareControls = () => {
+    document.querySelectorAll<HTMLElement>('[data-share-control]').forEach((control) => {
+      if (control.dataset.shareReady === 'true') return;
+      const button = control.querySelector<HTMLButtonElement>('[data-share-button]');
+      const status = control.querySelector<HTMLElement>('[data-share-status]');
+      if (!button || !status) return;
+
+      control.dataset.shareReady = 'true';
+      button.addEventListener('click', async () => {
+        const title = button.dataset.shareTitle ?? document.title;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, url: window.location.href });
+            status.textContent = 'Tautan siap dibagikan.';
+          } else {
+            await navigator.clipboard.writeText(window.location.href);
+            status.textContent = 'Tautan disalin.';
+          }
+        } catch (error) {
+          if ((error as DOMException).name !== 'AbortError') {
+            status.textContent = 'Tautan belum dapat disalin.';
+          }
+        }
+
+        window.setTimeout(() => {
+          status.textContent = '';
+        }, 3000);
+      });
+    });
+  };
+
+  initialiseShareControls();
+  document.addEventListener('astro:page-load', initialiseShareControls);
+</script>
+
+<style>
+  .share-control {
+    position: relative;
+    display: inline-flex;
+  }
+
+  button {
+    display: inline-flex;
+    min-height: 2.875rem;
+    padding: 0.68rem 1rem;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--color-dark);
+    background: var(--color-surface);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast),
+      background var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  button:hover {
+    border-color: var(--color-primary-dark);
+    color: var(--color-link);
+    background: var(--color-primary-soft);
+    transform: translateY(-1px);
+  }
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+  }
+
+  .share-control--dark button {
+    border-color: rgb(255 255 255 / 22%);
+    color: var(--color-surface);
+    background: rgb(255 255 255 / 9%);
+  }
+
+  .share-control--dark button:hover {
+    border-color: var(--color-primary);
+    color: var(--color-dark);
+    background: var(--color-primary);
+  }
+
+  .share-control__status {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 50%;
+    z-index: 5;
+    width: max-content;
+    max-width: 13rem;
+    padding: 0.35rem 0.58rem;
+    border-radius: var(--radius-sm);
+    color: var(--color-surface);
+    background: var(--color-dark);
+    font-size: 0.66rem;
+    transform: translateX(-50%);
+  }
+
+  .share-control__status:empty {
+    display: none;
+  }
+</style>

@@ -20,8 +20,11 @@ const visibleHeadings = headings.filter(({ depth }) => depth === 2 || depth === 
       class:list={['table-of-contents', `table-of-contents--${placement}`]}
       data-toc-placement={placement}
     >
-      <details open>
-        <summary>Daftar isi</summary>
+      <details open={placement === 'desktop'}>
+        <summary>
+          <span>Daftar isi</span>
+          <small>{visibleHeadings.length} bagian</small>
+        </summary>
         <nav aria-label="Daftar isi artikel">
           <ol>
             {visibleHeadings.map((heading) => (
@@ -64,6 +67,18 @@ const visibleHeadings = headings.filter(({ depth }) => depth === 2 || depth === 
     cursor: pointer;
   }
 
+  summary > span {
+    display: grid;
+  }
+
+  summary small {
+    margin-left: auto;
+    margin-right: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: 0.66rem;
+    font-weight: 700;
+  }
+
   summary::after {
     content: '+';
     font-size: var(--font-size-lg);
@@ -97,7 +112,7 @@ const visibleHeadings = headings.filter(({ depth }) => depth === 2 || depth === 
   }
 
   a:hover {
-    color: #2f6f9d;
+    color: var(--color-link);
   }
 
   .is-nested a {

@@ -54,7 +54,7 @@ const { items } = Astro.props;
     display: inline-flex;
     min-height: 2.75rem;
     align-items: center;
-    color: #2f6f9d;
+    color: var(--color-link);
   }
 
   [aria-current='page'] {
@@ -64,5 +64,28 @@ const { items } = Astro.props;
 
   .separator {
     color: var(--color-border);
+  }
+
+  @media (max-width: 40rem) {
+    ol {
+      display: block;
+    }
+
+    li {
+      display: none;
+    }
+
+    li:nth-last-child(2) {
+      display: inline-flex;
+    }
+
+    li:nth-last-child(2) .separator {
+      display: none;
+    }
+
+    li:nth-last-child(2) a::before {
+      margin-right: var(--space-2);
+      content: '←';
+    }
   }
 </style>

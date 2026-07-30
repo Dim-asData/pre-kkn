@@ -13,12 +13,33 @@ interface FilterGroup {
 interface Props {
   groups: FilterGroup[];
   resultLabel?: string;
+  searchPlaceholder?: string;
 }
 
-const { groups, resultLabel = 'konten' } = Astro.props;
+const {
+  groups,
+  resultLabel = 'konten',
+  searchPlaceholder = 'Cari judul atau kata kunci',
+} = Astro.props;
 ---
 
 <form class="filter-bar" data-filter-bar data-result-label={resultLabel}>
+  <label class="filter-bar__search">
+    <span>Cari</span>
+    <span class="filter-bar__search-field">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="8.5" cy="8.5" r="5.5"></circle>
+        <path d="m12.5 12.5 4 4"></path>
+      </svg>
+      <input
+        type="search"
+        name="q"
+        placeholder={searchPlaceholder}
+        autocomplete="off"
+        data-filter-search-input
+      />
+    </span>
+  </label>
   {
     groups.map((group) => (
       <fieldset>
@@ -58,6 +79,7 @@ const { groups, resultLabel = 'konten' } = Astro.props;
       const items = [...root.querySelectorAll<HTMLElement>('[data-filter-item]')];
       const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
       const result = root.querySelector<HTMLElement>('[data-filter-result]');
+      const searchInput = bar?.querySelector<HTMLInputElement>('[data-filter-search-input]');
       if (!bar) return;
 
       root.dataset.filterReady = 'true';
@@ -70,6 +92,8 @@ const { groups, resultLabel = 'konten' } = Astro.props;
       ];
       const state = Object.fromEntries(keys.map((key) => [key, ''])) as Record<string, string>;
       const params = new URLSearchParams(window.location.search);
+      const normalise = (value: string) => value.trim().toLocaleLowerCase('id-ID');
+      if (searchInput) searchInput.value = params.get('q') ?? '';
 
       keys.forEach((key) => {
         const requested = params.get(key) ?? '';
@@ -83,12 +107,15 @@ const { groups, resultLabel = 'konten' } = Astro.props;
         let visibleCount = 0;
 
         items.forEach((item) => {
-          const visible = keys.every((key) => {
+          const matchesFilters = keys.every((key) => {
             const selected = state[key];
             if (!selected) return true;
             const values = (item.getAttribute(`data-filter-${key}`) ?? '').split('|');
             return values.includes(selected);
           });
+          const query = normalise(searchInput?.value ?? '');
+          const searchableText = normalise(item.dataset.filterSearch ?? item.textContent ?? '');
+          const visible = matchesFilters && (!query || searchableText.includes(query));
 
           item.hidden = !visible;
           if (visible) visibleCount += 1;
@@ -111,6 +138,9 @@ const { groups, resultLabel = 'konten' } = Astro.props;
           if (state[key]) nextParams.set(key, state[key]);
           else nextParams.delete(key);
         });
+        const searchQuery = searchInput?.value.trim() ?? '';
+        if (searchQuery) nextParams.set('q', searchQuery);
+        else nextParams.delete('q');
         const query = nextParams.toString();
         history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
       };
@@ -121,6 +151,7 @@ const { groups, resultLabel = 'konten' } = Astro.props;
         state[button.dataset.filterKey ?? ''] = button.dataset.filterValue ?? '';
         render();
       });
+      searchInput?.addEventListener('input', render);
 
       render();
     });
@@ -136,7 +167,7 @@ const { groups, resultLabel = 'konten' } = Astro.props;
     margin-bottom: var(--space-6);
     padding: var(--space-4);
     gap: var(--space-4);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-lg);
     background: rgb(255 255 255 / 76%);
     box-shadow: var(--shadow-sm);
@@ -149,13 +180,62 @@ const { groups, resultLabel = 'konten' } = Astro.props;
     border: 0;
   }
 
-  legend {
+  legend,
+  .filter-bar__search > span:first-child {
     margin-bottom: var(--space-2);
     color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+  }
+
+  .filter-bar__search {
+    display: grid;
+    min-width: 0;
+  }
+
+  .filter-bar__search-field {
+    display: flex;
+    min-height: 3rem;
+    padding-inline: var(--space-3);
+    align-items: center;
+    gap: var(--space-2);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast);
+  }
+
+  .filter-bar__search-field:focus-within {
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 3px rgb(32 93 135 / 14%);
+  }
+
+  .filter-bar__search-field svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-linecap: round;
+    stroke-width: 1.7;
+  }
+
+  .filter-bar__search-field input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: var(--color-text);
+    background: transparent;
+  }
+
+  .filter-bar__search-field input::placeholder {
+    color: #7b858a;
   }
 
   .filter-bar__options {
@@ -191,8 +271,8 @@ const { groups, resultLabel = 'konten' } = Astro.props;
 
   button[aria-pressed='true'] {
     border-color: var(--color-primary-dark);
-    color: var(--color-dark);
-    background: var(--color-primary);
+    color: var(--color-surface);
+    background: var(--color-dark);
   }
 
   .filter-bar__result {
@@ -204,7 +284,7 @@ const { groups, resultLabel = 'konten' } = Astro.props;
   @media (min-width: 64rem) {
     .filter-bar {
       padding: var(--space-5);
-      grid-template-columns: repeat(3, minmax(0, auto));
+      grid-template-columns: minmax(16rem, 1.25fr) repeat(3, minmax(0, auto));
       align-items: end;
     }
 

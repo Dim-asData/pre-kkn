@@ -30,9 +30,18 @@ const { product } = Astro.props;
     display: grid;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
     background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .product-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
   }
 
   img {
@@ -50,7 +59,7 @@ const { product } = Astro.props;
   }
 
   h3 {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);
   }
 
   p {
@@ -62,8 +71,8 @@ const { product } = Astro.props;
     width: fit-content;
     padding: 0.2rem 0.58rem;
     border-radius: var(--radius-pill);
-    color: var(--color-text-muted);
-    background: var(--color-surface-soft);
+    color: var(--color-t2);
+    background: var(--color-t2-soft);
     font-size: var(--font-size-xs);
     font-weight: 750;
   }

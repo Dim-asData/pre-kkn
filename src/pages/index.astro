@@ -1,13 +1,11 @@
 ---
 import ActivityCard from '../components/ActivityCard.astro';
 import EmptyState from '../components/EmptyState.astro';
-import GroupBadge from '../components/GroupBadge.astro';
 import GroupCard from '../components/GroupCard.astro';
 import HeroSection from '../components/HeroSection.astro';
 import ImageGallery from '../components/ImageGallery.astro';
 import PrimaryButton from '../components/PrimaryButton.astro';
 import SecondaryButton from '../components/SecondaryButton.astro';
-import StatusBadge from '../components/StatusBadge.astro';
 import TextLink from '../components/TextLink.astro';
 import UMKMCard from '../components/UMKMCard.astro';
 import {
@@ -15,8 +13,6 @@ import {
   buildActivityGallery,
   loadSheetsData,
   publicSheetsData,
-  type ActivityDetail,
-  type ContentStatus,
 } from '../data';
 import BaseLayout from '../layouts/BaseLayout.astro';
 
@@ -36,51 +32,40 @@ const featuredUmkm = data.umkm
       entries.findIndex((candidate) => candidate.groupId === item.groupId) === index,
   )
   .slice(0, 3);
-const featuredEducationActivities = activities
-  .filter(({ category }) => category === 'education')
-  .slice(0, 2);
-const galleryImages = buildActivityGallery(activities).slice(0, 6).map((image) => ({
-  src: image.src,
-  alt: image.alt,
-  caption: image.caption,
-  href: image.activityHref,
-}));
-
-const statusForPrograms = (programs: ActivityDetail[]): ContentStatus => {
-  if (programs.some(({ status }) => status === 'ongoing')) return 'ongoing';
-  if (programs.length > 0 && programs.every(({ status }) => status === 'completed')) {
-    return 'completed';
-  }
-  if (programs.length > 0 && programs.every(({ status }) => status === 'cancelled')) {
-    return 'cancelled';
-  }
-  return 'planned';
-};
-const programGroups = data.groups
-  .map((group) => {
-    const programs = activities.filter(({ groupId }) => groupId === group.id);
-    return { id: group.id, group, programs, status: statusForPrograms(programs) };
-  })
-  .filter(({ programs }) => programs.length > 0);
+const galleryImages = buildActivityGallery(activities)
+  .slice(0, 6)
+  .map((image) => ({
+    src: image.src,
+    alt: image.alt,
+    caption: image.caption,
+    href: image.activityHref,
+  }));
+const verifiedOutputs = activities
+  .flatMap(({ outputs }) => outputs)
+  .filter(({ verificationStatus }) => verificationStatus === 'verified');
+const activeProgress = activities.filter(({ status }) =>
+  ['ongoing', 'completed'].includes(status),
+).length;
 ---
 
 <BaseLayout>
   <HeroSection
     eyebrow="KKN Budi Luhur University · Kecamatan Pancalang"
-    title="Cerita, karya, dan pengabdian dari tiga desa."
-    description="Ruang dokumentasi kegiatan, pendampingan UMKM, dan program edukasi di Sumbakeling, Silebu, serta Pancalang—disajikan dengan hangat, jujur, dan mudah dipahami."
-    primaryAction={{ href: '/kegiatan', label: 'Jelajahi kegiatan' }}
-    secondaryAction={{ href: '#kelompok', label: 'Kenali tiga kelompok' }}
+    title="Cerita pengabdian yang dekat dengan warga."
+    description="Dokumentasi kegiatan mahasiswa dan ruang untuk mengenal produk lokal dari Sumbakeling, Silebu, serta Pancalang—disusun jujur, hangat, dan mudah ditelusuri."
+    primaryAction={{ href: '/kegiatan', label: 'Lihat kegiatan terbaru' }}
+    secondaryAction={{ href: '/umkm', label: 'Cari produk UMKM' }}
   />
 
-  <section class="section groups-section" id="kelompok">
+  <section class="section village-section" id="desa">
     <div class="container">
-      <div class="section-heading">
-        <p class="eyebrow">Tiga kelompok, satu jejak</p>
-        <h2>Program yang tumbuh dari kebutuhan setiap desa.</h2>
+      <div class="section-heading section-heading--split">
+        <div>
+          <h2>Tiga desa, cerita yang tumbuh dengan cara berbeda.</h2>
+        </div>
         <p>
-          Setiap kelompok membawa fokus berbeda. Jumlah kegiatan di bawah selalu dihitung dari
-          artikel yang sudah tersedia, bukan dari angka perkiraan.
+          Pilih desa untuk langsung melihat kegiatan yang relevan. Kode kelompok tetap ditampilkan
+          sebagai informasi pendukung.
         </p>
       </div>
       {
@@ -101,92 +86,39 @@ const programGroups = data.groups
           </div>
         ) : (
           <EmptyState
-            title="Ringkasan kelompok belum dapat dimuat"
-            description="Data kelompok dari Google Sheets sedang tidak tersedia. Halaman tetap aman dan dapat dibangun kembali saat koneksi pulih."
+            title="Ringkasan desa belum dapat dimuat"
+            description="Data wilayah sedang tidak tersedia. Daftar kegiatan dan UMKM tetap dapat dijelajahi melalui navigasi utama."
           />
         )
       }
     </div>
   </section>
 
-  <section class="section program-map-section">
-    <div class="container">
-      <div class="section-heading">
-        <p class="eyebrow">Peta rencana program</p>
-        <h2>{activities.length} rangkaian utama dari tiga desa.</h2>
-        <p>
-          Judul dan status setiap rangkaian dibaca dari Google Sheets. Data rencana tetap dibedakan
-          dari realisasi sampai bukti pelaksanaannya diverifikasi.
-        </p>
-      </div>
-      {
-        programGroups.length > 0 ? (
-          <div
-            class="program-map"
-            aria-label="Rencana program yang dikerjakan paralel oleh T1, T2, dan T3"
-          >
-            {programGroups.map(({ id, group, programs, status }) => (
-              <article class:list={['program-group', `program-group--${id}`]}>
-                <header>
-                  <div class="program-group__badges">
-                    <GroupBadge kelompok={id} />
-                    <StatusBadge status={status} />
-                  </div>
-                  <div>
-                    <h3>
-                      <a href={`/kegiatan?kelompok=${id}`}>{group.village}</a>
-                    </h3>
-                    <p>{programs.length} rangkaian program</p>
-                  </div>
-                </header>
-                <ul aria-label={`Program ${id.toUpperCase()}`}>
-                  {programs.map((program) => (
-                    <li>
-                      <a
-                        href={`/kegiatan?kelompok=${id}&kategori=${program.category}`}
-                        aria-label={`${program.title} — lihat kegiatan ${id.toUpperCase()}`}
-                      >
-                        <span class="program-group__marker" aria-hidden="true"></span>
-                        <span class="program-group__program-title">{program.title}</span>
-                        <span class="program-group__arrow" aria-hidden="true">→</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="Peta program belum dapat dimuat"
-            description="Metadata T1, T2, dan T3 tetap dibaca dari Google Sheets agar nama kelompok dan desa tidak dipelihara di dua sumber."
-          />
-        )
-      }
-    </div>
-  </section>
-
-  <section class="section">
+  <section class="section latest-section">
     <div class="container">
       <div class="section-heading section-heading--with-link">
         <div>
-          <p class="eyebrow">Kegiatan</p>
-          <h2>Kegiatan terbaru atau yang paling dekat.</h2>
-          <p>Rencana dan realisasi selalu dibedakan melalui badge status serta pilihan tanggal.</p>
+          <h2>Lihat apa yang sedang direncanakan dan dikerjakan.</h2>
+          <p>
+            Status, tanggal, lokasi, dan bukti ditampilkan apa adanya agar rencana tidak terbaca
+            sebagai realisasi.
+          </p>
         </div>
         <TextLink href="/kegiatan">Lihat semua kegiatan</TextLink>
       </div>
       {
         featuredActivities.length ? (
           <div class="overview-grid overview-grid--three">
-            {featuredActivities.map((activity) => <ActivityCard activity={activity} />)}
+            {featuredActivities.map((activity, index) => (
+              <ActivityCard activity={activity} eager={index === 0} />
+            ))}
           </div>
         ) : (
           <EmptyState
             title="Artikel kegiatan belum tersedia"
-            description="Belum ada artikel kegiatan aktif yang dapat ditampilkan. Konten rencana tidak akan ditulis seolah-olah sudah terlaksana."
+            description="Belum ada artikel kegiatan aktif yang dapat ditampilkan."
           >
-            <SecondaryButton href="/kegiatan">Buka overview kegiatan</SecondaryButton>
+            <SecondaryButton href="/kegiatan">Buka daftar kegiatan</SecondaryButton>
           </EmptyState>
         )
       }
@@ -194,18 +126,19 @@ const programGroups = data.groups
   </section>
 
   <section class="section umkm-section">
-    <div class="container">
-      <div class="section-heading section-heading--with-link">
-        <div>
-          <p class="eyebrow">UMKM binaan</p>
-          <h2>Usaha lokal, proses belajar, dan identitas yang bertumbuh.</h2>
-          <p>Direktori dirancang agar tetap nyaman ketika jumlah UMKM bertambah, terutama di T3.</p>
-        </div>
-        <TextLink href="/umkm">Jelajahi direktori UMKM</TextLink>
+    <div class="container umkm-feature">
+      <div class="umkm-feature__intro">
+        <p class="eyebrow">Belanja lebih dekat</p>
+        <h2>Kenali produk dan usaha dari desa setempat.</h2>
+        <p>
+          Profil usaha memprioritaskan produk, cara pemesanan, jam buka, dan lokasi. Kontak hanya
+          ditampilkan setelah aman untuk dipublikasikan.
+        </p>
+        <PrimaryButton href="/umkm">Temukan produk UMKM</PrimaryButton>
       </div>
       {
         featuredUmkm.length ? (
-          <div class="overview-grid overview-grid--three">
+          <div class="overview-grid overview-grid--three umkm-feature__grid">
             {featuredUmkm.map((item) => (
               <UMKMCard
                 item={item}
@@ -216,329 +149,273 @@ const programGroups = data.groups
         ) : (
           <EmptyState
             title="Profil UMKM belum dapat ditampilkan"
-            description="Hanya data berstatus verified dan aktif yang boleh muncul di direktori publik."
+            description="Hanya data yang aktif dan telah diperiksa yang muncul di direktori publik."
           />
         )
       }
     </div>
   </section>
 
-  <section class="section education-section">
-    <div class="container education-feature">
-      <div class="education-feature__intro">
-        <p class="eyebrow">Kegiatan edukasi</p>
-        <h2>Belajar aman, aktif, dan dekat dengan keseharian anak.</h2>
-        <p>
-          Sekolah, guru, dan peserta didik didokumentasikan sebagai lokasi, mitra, atau penerima
-          manfaat di dalam artikel kegiatan; bukan sebagai profil promosi terpisah.
-        </p>
-        <PrimaryButton href="/kegiatan?kategori=education">Lihat kegiatan edukasi</PrimaryButton>
+  <section class="section impact-section">
+    <div class="container impact-shell">
+      <div class="impact-copy">
+        <h2>Angka ringkas dengan konteks yang tetap terjaga.</h2>
       </div>
-      {
-        featuredEducationActivities.length ? (
-          <div class="overview-grid">
-            {featuredEducationActivities.map((activity) => <ActivityCard activity={activity} />)}
-          </div>
-        ) : (
-          <EmptyState
-            title="Kegiatan edukasi belum tersedia"
-            description="Artikel kegiatan edukasi aktif akan tampil di bagian ini setelah tersedia."
-          />
-        )
-      }
+      <dl class="impact-grid">
+        <div>
+          <dt>Program aktif</dt>
+          <dd>{activities.length}</dd>
+        </div>
+        <div>
+          <dt>Program selesai</dt>
+          <dd>{activeProgress}</dd>
+        </div>
+        <div>
+          <dt>Output tercatat</dt>
+          <dd>{verifiedOutputs.length}</dd>
+        </div>
+        <div>
+          <dt>UMKM publik</dt>
+          <dd>{data.umkm.length}</dd>
+        </div>
+      </dl>
     </div>
   </section>
 
-  <section class="section">
+  <section class="section gallery-section">
     <div class="container">
       {
         galleryImages.length ? (
           <>
-            <ImageGallery images={galleryImages} title="Potongan cerita dari tiga kelompok" />
-            <div class="gallery-link"><TextLink href="/galeri">Buka galeri lengkap</TextLink></div>
+            <div class="section-heading section-heading--with-link">
+              <div>
+                <h2>Potongan suasana dari lapangan.</h2>
+                <p>Setiap foto kembali ke artikel kegiatan sumber agar konteksnya tidak terlepas.</p>
+              </div>
+              <TextLink href="/galeri">Buka galeri lengkap</TextLink>
+            </div>
+            <ImageGallery images={galleryImages} showHeading={false} />
           </>
         ) : (
           <EmptyState
             title="Galeri kegiatan belum tersedia"
-            description="Foto akan muncul setelah gambar ditambahkan ke artikel kegiatan aktif."
+            description="Foto akan muncul setelah gambar terverifikasi ditambahkan ke artikel kegiatan."
           />
         )
       }
     </div>
   </section>
 
-  <section class="section cta-section">
-    <div class="container">
-      <div class="cta-card">
-        <div>
-          <p class="eyebrow">Jejak yang diperbarui bersama</p>
-          <h2>Ikuti rencana, proses, dan hasil kegiatan dari satu tempat.</h2>
-          <p>
-            Website ini diperbarui rutin setelah kelompok menyelesaikan program dan data lapangan
-            selesai diperiksa.
-          </p>
-        </div>
-        <PrimaryButton href="/kegiatan">Jelajahi kegiatan</PrimaryButton>
-      </div>
-    </div>
-  </section>
 </BaseLayout>
 
 <style>
-  .groups-section,
-  .education-section {
-    background: rgb(255 255 255 / 50%);
+  .village-section,
+  .gallery-section {
+    background: rgb(255 255 255 / 46%);
   }
 
-  .program-map-section {
-    background: var(--color-surface-soft);
+  .latest-section {
+    position: relative;
   }
 
-  .program-map-section .section-heading {
-    margin-inline: auto;
-    justify-items: center;
-    text-align: center;
+  .latest-section::before {
+    position: absolute;
+    z-index: -1;
+    width: 16rem;
+    height: 16rem;
+    border-radius: 50%;
+    background: rgb(232 154 183 / 7%);
+    content: '';
+    inset: 18% auto auto -9rem;
   }
 
+  .section-heading--split,
   .section-heading--with-link {
     max-width: none;
   }
 
+  .section-heading--split > div,
   .section-heading--with-link > div {
     display: grid;
-    max-width: 44rem;
-    gap: var(--space-3);
-  }
-
-  .program-map {
-    display: grid;
-    gap: var(--space-4);
-  }
-
-  .program-group {
-    display: flex;
-    min-width: 0;
-    overflow: hidden;
-    flex-direction: column;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .program-group header {
-    display: grid;
-    padding: var(--space-5);
-    gap: var(--space-3);
-    border-top: 4px solid transparent;
-  }
-
-  .program-group--t1 header {
-    border-top-color: var(--color-t1);
-    background: linear-gradient(135deg, var(--color-t1-soft), var(--color-surface) 76%);
-  }
-
-  .program-group--t2 header {
-    border-top-color: var(--color-t2);
-    background: linear-gradient(135deg, var(--color-t2-soft), var(--color-surface) 76%);
-  }
-
-  .program-group--t3 header {
-    border-top-color: var(--color-t3);
-    background: linear-gradient(135deg, var(--color-t3-soft), var(--color-surface) 76%);
-  }
-
-  .program-group__badges {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
+    max-width: 46rem;
     gap: var(--space-2);
   }
 
-  .program-group header > div:last-child {
-    display: grid;
-    gap: var(--space-1);
-  }
-
-  .program-group h3 {
-    font-size: var(--font-size-xl);
-  }
-
-  .program-group h3 a {
-    color: inherit;
-    text-decoration: none;
-    text-underline-offset: 0.2em;
-  }
-
-  .program-group h3 a:hover {
-    text-decoration: underline;
-  }
-
-  .program-group h3 a:focus-visible {
-    border-radius: var(--radius-sm);
-    outline: 3px solid var(--color-focus);
-    outline-offset: 3px;
-  }
-
-  .program-group header p {
+  .section-heading--split > p {
+    max-width: 36rem;
     color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
-    font-weight: 700;
   }
 
-  .program-group ul {
-    display: grid;
-    margin: 0;
-    padding: 0 var(--space-5) var(--space-3);
-    flex: 1;
-    list-style: none;
+  .umkm-section {
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 8% 15%, rgb(124 185 232 / 22%), transparent 19rem),
+      radial-gradient(circle at 94% 92%, rgb(85 107 47 / 10%), transparent 20rem),
+      var(--color-primary-soft);
   }
 
-  .program-group li {
-    min-width: 0;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .program-group li a {
-    display: grid;
-    min-width: 0;
-    margin-inline: calc(0rem - var(--space-2));
-    padding: var(--space-4) var(--space-2);
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-content: center;
-    align-items: start;
-    gap: var(--space-3);
-    border-radius: var(--radius-md);
-    color: var(--color-dark);
-    text-decoration: none;
-    transition:
-      background-color var(--transition-fast),
-      color var(--transition-fast);
-  }
-
-  .program-group li a:hover {
-    background: var(--color-surface-soft);
-  }
-
-  .program-group li a:focus-visible {
-    outline: 3px solid var(--color-focus);
-    outline-offset: 2px;
-  }
-
-  .program-group__marker {
-    width: 0.35rem;
-    height: 2rem;
-    border-radius: var(--radius-pill);
-    background: var(--color-primary);
-  }
-
-  .program-group--t1 .program-group__marker {
-    background: var(--color-t1);
-  }
-
-  .program-group--t2 .program-group__marker {
-    background: var(--color-t2);
-  }
-
-  .program-group--t3 .program-group__marker {
-    background: var(--color-t3);
-  }
-
-  .program-group__program-title {
-    font-size: var(--font-size-sm);
-    font-weight: 750;
-    line-height: 1.5;
-  }
-
-  .program-group__arrow {
-    color: var(--color-text-muted);
-    font-size: var(--font-size-lg);
-    line-height: 1.25;
-    transition: transform var(--transition-fast);
-  }
-
-  .program-group li a:hover .program-group__arrow {
-    transform: translateX(0.2rem);
-  }
-
-  .education-feature {
+  .umkm-feature {
     display: grid;
     gap: var(--space-7);
   }
 
-  .education-feature__intro {
+  .umkm-feature__intro {
     display: grid;
-    max-width: 35rem;
-    align-content: center;
+    max-width: 37rem;
+    align-content: start;
     justify-items: start;
     gap: var(--space-4);
   }
 
-  .education-feature__intro h2 {
-    font-size: var(--font-size-2xl);
+  .umkm-feature__intro h2 {
+    font-size: clamp(1.9rem, 4vw, 2.7rem);
   }
 
-  .education-feature__intro > p:not(.eyebrow) {
+  .umkm-feature__intro > p:not(.eyebrow) {
     color: var(--color-text-muted);
   }
 
-  .gallery-link {
-    margin-top: var(--space-4);
-  }
-
-  .cta-section {
-    padding-top: 0;
-  }
-
-  .cta-card {
-    display: grid;
-    padding: clamp(var(--space-5), 7vw, var(--space-8));
-    gap: var(--space-5);
-    border: 1px solid rgb(79 143 190 / 20%);
-    border-radius: var(--radius-lg);
+  .impact-section {
+    color: rgb(255 255 255 / 72%);
     background:
-      radial-gradient(circle at 90% 20%, rgb(255 255 255 / 62%), transparent 14rem),
-      var(--color-primary-soft);
+      radial-gradient(circle at 88% 20%, rgb(124 185 232 / 15%), transparent 21rem),
+      var(--color-dark);
   }
 
-  .cta-card > div {
+  .impact-shell {
     display: grid;
-    max-width: 44rem;
+    gap: var(--space-7);
+  }
+
+  .impact-copy {
+    display: grid;
+    max-width: 40rem;
     gap: var(--space-3);
   }
 
-  .cta-card h2 {
+  .impact-copy .eyebrow {
+    color: #a8d7f5;
+  }
+
+  .impact-copy h2 {
+    color: var(--color-surface);
     font-size: var(--font-size-2xl);
   }
 
-  .cta-card p:not(.eyebrow) {
+  .impact-grid {
+    display: grid;
+    margin: 0;
+    gap: var(--space-3);
+  }
+
+  .impact-grid div {
+    display: grid;
+    padding: var(--space-4);
+    gap: var(--space-1);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: var(--radius-md);
+    background: rgb(255 255 255 / 6%);
+  }
+
+  .impact-grid dt,
+  .impact-grid span {
+    color: rgb(255 255 255 / 58%);
+    font-size: var(--font-size-xs);
+  }
+
+  .impact-grid dt {
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .impact-grid dd {
+    margin: 0;
+    color: var(--color-surface);
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    line-height: 1.1;
+  }
+
+  .transparency-section {
+    padding-top: 0;
+  }
+
+  .transparency-card {
+    display: grid;
+    padding: clamp(var(--space-5), 6vw, var(--space-7));
+    align-items: center;
+    gap: var(--space-5);
+    border: 1px solid rgb(85 107 47 / 20%);
+    border-radius: var(--radius-lg);
+    background: var(--color-t3-soft);
+  }
+
+  .transparency-card__icon {
+    display: grid;
+    width: 3.5rem;
+    height: 3.5rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-t3-dark);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .transparency-card__icon svg {
+    width: 1.8rem;
+    height: 1.8rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.7;
+  }
+
+  .transparency-card > div:nth-child(2) {
+    display: grid;
+    max-width: 42rem;
+    gap: var(--space-2);
+  }
+
+  .transparency-card h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .transparency-card p:not(.eyebrow) {
     color: var(--color-text-muted);
   }
 
   @media (min-width: 48rem) {
+    .section-heading--split,
     .section-heading--with-link {
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: minmax(0, 1fr) minmax(14rem, auto);
       align-items: end;
     }
 
-    .program-map {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .impact-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
-    .program-group ul {
-      grid-auto-rows: 1fr;
-    }
-
-    .cta-card {
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
+    .transparency-card {
+      grid-template-columns: auto minmax(0, 1fr) auto;
     }
   }
 
-  @media (min-width: 64rem) {
-    .education-feature {
-      grid-template-columns: minmax(18rem, 0.7fr) minmax(0, 1.3fr);
+  @media (min-width: 72rem) {
+    .umkm-feature {
+      grid-template-columns: minmax(18rem, 0.4fr) minmax(0, 1.6fr);
+      align-items: start;
+    }
+
+    .umkm-feature__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .impact-shell {
+      grid-template-columns: minmax(18rem, 0.6fr) minmax(0, 1.4fr);
+      align-items: end;
     }
   }
 </style>

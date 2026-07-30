@@ -24,7 +24,7 @@ const { beneficiaries } = Astro.props;
             <div>
               <dt>{item.label}</dt>
               <dd>
-                <span>{isActual ? 'Realisasi' : 'Rencana'}</span>
+                <span>{isActual ? 'Tercapai' : 'Rencana'}</span>
                 <strong>{value === null ? 'Belum ditentukan' : `${value} ${item.unit}`}</strong>
               </dd>
             </div>

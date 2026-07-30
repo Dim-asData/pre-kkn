@@ -52,10 +52,10 @@ const filterGroups = [
   <section class="page-intro">
     <div class="page-intro__inner container">
       <p class="eyebrow">Arsip kegiatan</p>
-      <h1>Rencana, proses, dan hasil yang ditulis apa adanya.</h1>
+      <h1>Temukan kegiatan dari tiga desa.</h1>
       <p class="page-intro__description">
-        Setiap kegiatan memisahkan data rencana dan realisasi. Badge “Rencana” berarti kegiatan
-        belum boleh dibaca sebagai sesuatu yang sudah terlaksana.
+        Cari berdasarkan judul, desa, jenis program, atau status. Setiap artikel membedakan
+        rencana, proses, dan hasil agar informasinya mudah dipercaya.
       </p>
       <p class="page-intro__meta">
         <strong>{activities.length} kegiatan</strong>
@@ -70,11 +70,22 @@ const filterGroups = [
       {
         activities.length ? (
           <>
-            <FilterBar groups={filterGroups} resultLabel="kegiatan" />
+            <FilterBar
+              groups={filterGroups}
+              resultLabel="kegiatan"
+              searchPlaceholder="Cari judul, lokasi, atau kata kunci"
+            />
             <div class="overview-grid overview-grid--three">
               {activities.map((activity) => (
                 <div
                   data-filter-item
+                  data-filter-search={[
+                    activity.title,
+                    activity.shortDescription,
+                    activity.location,
+                    activity.category,
+                    activity.groupId,
+                  ].join(' ')}
                   data-filter-kelompok={activity.groupId}
                   data-filter-kategori={activity.category}
                   data-filter-status={activity.status}
@@ -108,5 +119,9 @@ const filterGroups = [
 
   .filtered-empty {
     margin-top: var(--space-6);
+  }
+
+  .archive-note {
+    margin-top: var(--space-7);
   }
 </style>

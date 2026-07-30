@@ -55,10 +55,10 @@ const filterGroups = [
   <section class="page-intro">
     <div class="page-intro__inner container">
       <p class="eyebrow">Cerita dalam gambar</p>
-      <h1>Potongan proses dari Sumbakeling, Silebu, dan Pancalang.</h1>
+      <h1>Suasana, proses, dan perjumpaan dari lapangan.</h1>
       <p class="page-intro__description">
-        Setiap foto berasal dari konteks artikel kegiatan aktif di Google Sheets dan dapat
-        ditelusuri kembali ke cerita sumbernya.
+        Perbesar foto untuk melihat caption, lalu buka artikel sumber untuk memahami cerita
+        lengkap di baliknya.
       </p>
       <p class="page-intro__meta">
         <strong>{gallery.length} foto</strong>
@@ -73,20 +73,37 @@ const filterGroups = [
       {
         gallery.length ? (
           <>
-            <FilterBar groups={filterGroups} resultLabel="foto" />
+            <FilterBar
+              groups={filterGroups}
+              resultLabel="foto"
+              searchPlaceholder="Cari kegiatan, caption, atau tag"
+            />
             <div class="gallery-grid">
               {gallery.map((image, index) => (
                 <figure
                   class:list={[index % 5 === 0 && 'gallery-card--tall']}
                   data-filter-item
+                  data-filter-search={[
+                    image.activityTitle,
+                    image.caption,
+                    image.alt,
+                    image.tags.join(' '),
+                    image.groupId,
+                    image.category,
+                  ].join(' ')}
                   data-filter-kelompok={image.groupId}
                   data-filter-kategori={image.category}
                   data-filter-tag={image.tags.join('|')}
                 >
-                  <a
+                  <button
+                    type="button"
                     class="gallery-card__image-link"
-                    href={image.activityHref}
-                    aria-label={`Buka artikel ${image.activityTitle}`}
+                    aria-label={`Perbesar foto dari ${image.activityTitle}`}
+                    data-gallery-open
+                    data-gallery-src={image.src}
+                    data-gallery-alt={image.alt}
+                    data-gallery-caption-text={image.caption}
+                    data-gallery-href={image.activityHref}
                   >
                     <img
                       src={image.src}
@@ -96,7 +113,7 @@ const filterGroups = [
                       loading="lazy"
                       decoding="async"
                     />
-                  </a>
+                  </button>
                   <figcaption>
                     <div class="gallery-card__meta">
                       <span>{image.groupId.toUpperCase()}</span>
@@ -112,11 +129,26 @@ const filterGroups = [
                         </ul>
                       )
                     }
-                    <a href={image.activityHref}>Baca artikel kegiatan sumber →</a>
+                    <a href={image.activityHref}>Lihat cerita kegiatan →</a>
                   </figcaption>
                 </figure>
               ))}
             </div>
+            <dialog class="gallery-dialog" data-gallery-dialog aria-label="Pratinjau foto kegiatan">
+              <div class="gallery-dialog__toolbar">
+                <p data-gallery-position></p>
+                <button type="button" data-gallery-close aria-label="Tutup pratinjau">×</button>
+              </div>
+              <img src="/default.png" alt="" width="1400" height="1000" data-gallery-image />
+              <div class="gallery-dialog__caption">
+                <p data-gallery-dialog-caption></p>
+                <a href="/kegiatan" data-gallery-source>Lihat cerita kegiatan</a>
+              </div>
+              <div class="gallery-dialog__navigation">
+                <button type="button" data-gallery-previous>← Foto sebelumnya</button>
+                <button type="button" data-gallery-next>Foto berikutnya →</button>
+              </div>
+            </dialog>
             <div hidden data-filter-empty class="filtered-empty">
               <EmptyState
                 title="Belum ada foto untuk filter ini"
@@ -135,6 +167,59 @@ const filterGroups = [
   </section>
 </BaseLayout>
 
+<script>
+  const initialiseGalleryPage = () => {
+    document.querySelectorAll<HTMLElement>('[data-filter-root]').forEach((root) => {
+      if (root.dataset.galleryPageReady === 'true') return;
+      const dialog = root.querySelector<HTMLDialogElement>('[data-gallery-dialog]');
+      const image = root.querySelector<HTMLImageElement>('[data-gallery-image]');
+      const caption = root.querySelector<HTMLElement>('[data-gallery-dialog-caption]');
+      const source = root.querySelector<HTMLAnchorElement>('[data-gallery-source]');
+      const position = root.querySelector<HTMLElement>('[data-gallery-position]');
+      const close = root.querySelector<HTMLButtonElement>('[data-gallery-close]');
+      const previous = root.querySelector<HTMLButtonElement>('[data-gallery-previous]');
+      const next = root.querySelector<HTMLButtonElement>('[data-gallery-next]');
+      const triggers = [...root.querySelectorAll<HTMLButtonElement>('[data-gallery-open]')];
+      if (!dialog || !image || !caption || !source || !position || !close || !previous || !next) {
+        return;
+      }
+
+      root.dataset.galleryPageReady = 'true';
+      let activeIndex = 0;
+      const showImage = (requestedIndex: number) => {
+        activeIndex = (requestedIndex + triggers.length) % triggers.length;
+        const trigger = triggers[activeIndex];
+        image.src = trigger.dataset.gallerySrc ?? '/default.png';
+        image.alt = trigger.dataset.galleryAlt ?? '';
+        caption.textContent =
+          trigger.dataset.galleryCaptionText ?? trigger.dataset.galleryAlt ?? '';
+        source.href = trigger.dataset.galleryHref ?? '/kegiatan';
+        position.textContent = `${activeIndex + 1} dari ${triggers.length}`;
+      };
+
+      triggers.forEach((trigger, index) => {
+        trigger.addEventListener('click', () => {
+          showImage(index);
+          dialog.showModal();
+        });
+      });
+      close.addEventListener('click', () => dialog.close());
+      previous.addEventListener('click', () => showImage(activeIndex - 1));
+      next.addEventListener('click', () => showImage(activeIndex + 1));
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+      dialog.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') showImage(activeIndex - 1);
+        if (event.key === 'ArrowRight') showImage(activeIndex + 1);
+      });
+    });
+  };
+
+  initialiseGalleryPage();
+  document.addEventListener('astro:page-load', initialiseGalleryPage);
+</script>
+
 <style>
   .gallery-grid {
     display: grid;
@@ -147,17 +232,21 @@ const filterGroups = [
     min-width: 0;
     margin: 0;
     overflow: hidden;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
     background: var(--color-surface);
     box-shadow: var(--shadow-sm);
   }
 
   .gallery-card__image-link {
     display: block;
+    width: 100%;
     min-width: 0;
+    padding: 0;
     overflow: hidden;
+    border: 0;
     background: var(--color-surface-soft);
+    cursor: zoom-in;
   }
 
   figure img {
@@ -199,7 +288,7 @@ const filterGroups = [
   }
 
   h2 a:hover {
-    color: #2f6f9d;
+    color: var(--color-link);
   }
 
   figcaption > p {
@@ -220,7 +309,7 @@ const filterGroups = [
   li {
     padding: 0.14rem 0.45rem;
     border-radius: var(--radius-pill);
-    color: #2f6f9d;
+    color: var(--color-link);
     background: var(--color-primary-soft);
     font-size: 0.65rem;
     font-weight: 700;
@@ -230,13 +319,106 @@ const filterGroups = [
     display: inline-flex;
     min-height: 2.75rem;
     align-items: center;
-    color: #2f6f9d;
+    color: var(--color-link);
     font-size: var(--font-size-xs);
     font-weight: 800;
   }
 
   .filtered-empty {
     margin-top: var(--space-6);
+  }
+
+  .gallery-dialog {
+    width: min(94vw, 64rem);
+    max-height: 94vh;
+    padding: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    background: var(--color-surface);
+    box-shadow: 0 24px 80px rgb(30 42 48 / 34%);
+  }
+
+  .gallery-dialog::backdrop {
+    background: rgb(30 42 48 / 76%);
+    backdrop-filter: blur(5px);
+  }
+
+  .gallery-dialog__toolbar,
+  .gallery-dialog__navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .gallery-dialog__toolbar {
+    margin-bottom: var(--space-3);
+  }
+
+  .gallery-dialog__toolbar p {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .gallery-dialog__toolbar button {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 50%;
+    color: var(--color-dark);
+    background: var(--color-surface);
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .gallery-dialog > img {
+    width: 100%;
+    max-height: 68vh;
+    border-radius: var(--radius-md);
+    object-fit: contain;
+    background: var(--color-surface-soft);
+  }
+
+  .gallery-dialog__caption {
+    display: grid;
+    padding-block: var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .gallery-dialog__caption p {
+    max-width: 42rem;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .gallery-dialog__caption a {
+    width: fit-content;
+    color: var(--color-link);
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+  }
+
+  .gallery-dialog__navigation {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .gallery-dialog__navigation button {
+    min-height: 2.75rem;
+    padding-inline: 0;
+    border: 0;
+    color: var(--color-link);
+    background: transparent;
+    font-size: var(--font-size-sm);
+    font-weight: 800;
+    cursor: pointer;
   }
 
   @media (min-width: 40rem) {
@@ -247,6 +429,12 @@ const filterGroups = [
 
     figcaption {
       padding: var(--space-4);
+    }
+
+    .gallery-dialog__caption {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
     }
 
     h2 {

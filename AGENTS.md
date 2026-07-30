@@ -1,3 +1,12 @@
+## Project Planning
+
+Before starting any work in this repository, always read these planning and reference files in full:
+
+- `README.md`
+- `PROJECT.md`
+- `DESIGN-SPEC.md`
+- `scripts/apps-script/README.md`
+
 ## Development
 
 When starting the dev server, use background mode:

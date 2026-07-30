@@ -20,6 +20,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <div class="not-found__actions">
         <PrimaryButton href="/">Kembali ke beranda</PrimaryButton>
         <SecondaryButton href="/kegiatan">Lihat kegiatan</SecondaryButton>
+        <SecondaryButton href="/umkm">Cari UMKM</SecondaryButton>
       </div>
     </div>
   </section>
@@ -27,9 +28,24 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <style>
   .not-found {
+    position: relative;
     display: grid;
     min-height: 62vh;
+    overflow: hidden;
     align-items: center;
+    background:
+      radial-gradient(circle at 82% 26%, rgb(124 185 232 / 22%), transparent 18rem),
+      radial-gradient(circle at 12% 90%, rgb(232 154 183 / 9%), transparent 18rem);
+  }
+
+  .not-found::after {
+    position: absolute;
+    width: 18rem;
+    height: 15rem;
+    border: 1px solid rgb(85 107 47 / 14%);
+    border-radius: 44% 56% 38% 62% / 54% 44% 56% 46%;
+    content: '';
+    inset: auto -8rem -8rem auto;
   }
 
   .not-found__content {
